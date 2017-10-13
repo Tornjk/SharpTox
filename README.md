@@ -1,5 +1,7 @@
-SharpTox [![Build Status](https://jenkins.impy.me/job/SharpTox%20x86/badge/icon)](https://jenkins.impy.me/job/SharpTox%20x86/)
+SharpTox
 ========
+Unofficial
+--------
 
 This project aims to provide a simple library that wraps all of the functions found in the [Tox library](https://github.com/irungentoo/ProjectTox-Core "ProjectTox GitHub repo").
 Tox is a free (as in freedom) Skype replacement.
@@ -8,37 +10,41 @@ Feel free to contribute!
 
 ### Things you'll need
 
-* The libtox(core, av and dns) library, you should compile that yourself from the [ProjectTox GitHub repo](https://github.com/irungentoo/ProjectTox-Core "Tox Github repo"). Guidelines on how to do this can be found [here](https://github.com/irungentoo/toxcore/blob/master/INSTALL.md "Crosscompile guidelines"). If you don't feel like compiling this yourself, you can find automatic builds for windows here: [x86](https://build.tox.chat/view/libtoxcore/job/libtoxcore_build_windows_x86_shared_release/ "x86 dll") or [x64](https://build.tox.chat/view/libtoxcore/job/libtoxcore_build_windows_x86_64_shared_release/ "x64 dll")
+* The libtox library, you should compile that yourself from the [ProjectTox GitHub repo](https://github.com/irungentoo/ProjectTox-Core "Tox Github repo"). Guidelines on how to do this can be found [here](https://github.com/irungentoo/toxcore/blob/master/INSTALL.md "Crosscompile guidelines"). If you don't feel like compiling this yourself, you can find automatic builds for windows here: [x86](https://build.tox.chat/view/libtoxcore/job/libtoxcore-toktok_build_windows_x86_shared_release/ "x86 dll") or [x64](https://build.tox.chat/view/libtoxcore/job/libtoxcore-toktok_build_windows_x86-64_shared_release/ "x64 dll")
 
-Depending on how you compiled the core libraries, the names of those may differ from the defaults in SharpTox. Be sure to change the value of the const string **dll** in ToxFunctions.cs, ToxAvFunctions.cs, ToxDnsFunctions.cs and ToxEncryptionFunctions.cs accordingly if needed.
+Depending on how you compiled the core libraries, the names of those may differ from the 
+defaults in SharpTox. Be sure to change the value of the const string **DLL**
+in Extern.cs accordingly if needed.
 
 ### Compiling and Testing
-Assuming you have the libraries mentioned above installed, it's time to compile (and test) SharpTox.
-##### Windows
-* Clone this repository.
-* Open SharpTox.sln in Visual Studio.
-* Let Visual Studio restore the NuGet packages and build the solution.
-* Optionally, run the tests by clicking 'Run All' in the Test Explorer.
+If you've set up your project like mentioned above you can go ahead and compile SharpTox.
 
-Or from the command line (Be sure to install [NUnit](http://www.nunit.org/index.php?p=download) and [NuGet](https://nuget.codeplex.com/) first):
+##### .NET Core (Windows/Linux/Mac)
+This Repository has been set up to work with **.NET Core**.
+
+Please follow the [How To Setup .NET Core](https://www.microsoft.com/net/core) Guide from
+Microsoft to setup your Environment for building and testing SharpTox.
+When you've setup everything accordingly to your system go to the project top directory of
+SharpTox and execute following in your commandline:
 
 ```
-git clone https://github.com/alexbakker/SharpTox
-nuget restore
-msbuild /p:Configuration:Debug
-nunit-console-x86 SharpTox.Tests/bin/Debug/SharpTox.Tests.dll
+dotnet restore
+dotnet build
 ```
 
-##### Linux
-* Install 'mono-complete' (this should include nunit), grab the latest version of [NuGet](https://nuget.codeplex.com/) and execute the following commands:
+#### Run the Tests
+In order to run the Tests for SharpTox make sure the **libtox** library is in your
+SharpTox.Tests/bin/(Configuration) directory.
+Run from your commandline:
+
 ```
-git clone https://github.com/alexbakker/SharpTox
-mono NuGet.exe restore
-xbuild /p:Configuration="Debug POSIX"
-nunit-console4 SharpTox.Tests/bin/Debug/SharpTox.Tests.dll
+dotnet test
 ```
-If you're having issues obtaining the NuGet packages, try executing:
-```mozroots --import --sync```
+
+## Attention:
+This repository is currently mainly for my own programming uses.
+If anything comes up or this changes I will write it down somewhere.
+Also I'm developing on Windows. So I'm not certain everything is working on Unix/Mac.
 
 **Looking for precompiled binaries? [Check this](https://jenkins.impy.me/ "SharpTox Binaries").**
 
