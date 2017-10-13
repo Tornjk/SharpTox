@@ -2,7 +2,6 @@ using System;
 using SharpTox.Core;
 using SharpTox.Av;
 using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace SharpTox.Test
@@ -10,13 +9,13 @@ namespace SharpTox.Test
     [TestFixture]
     public class AvFriendTests
     {
-        private bool _running = true;
         private Tox _tox1;
         private Tox _tox2;
         private ToxAv _toxAv1;
         private ToxAv _toxAv2;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
+        [MaxTime(10000)]
         public void Init()
         {
             var options = new ToxOptions(true, true);
@@ -48,11 +47,9 @@ namespace SharpTox.Test
             while (!answered) { DoIterate(); }
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void Cleanup()
         {
-            _running = false;
-
             _toxAv1.Dispose();
             _toxAv2.Dispose();
 

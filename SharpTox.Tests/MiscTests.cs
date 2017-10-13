@@ -11,7 +11,7 @@ namespace SharpTox.Test
     {
         private ToxOptions _options = new ToxOptions(true, true);
 
-        [Test, Timeout(30000)]
+        [Test, MaxTime(30000)]
         public void TestToxBootstrapAndConnect()
         {
             var tox = new Tox(_options);
@@ -31,7 +31,7 @@ namespace SharpTox.Test
             tox.Dispose();
         }
 
-        [Test, Timeout(120000)]
+        [Test, MaxTime(120000)]
         public void TestToxBootstrapAndConnectTcp()
         {
             var tox = new Tox(new ToxOptions(true, false));
