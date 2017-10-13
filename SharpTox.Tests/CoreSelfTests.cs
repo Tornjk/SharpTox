@@ -3,9 +3,7 @@ using System.Linq;
 using System.Threading;
 using SharpTox.Core;
 using SharpTox.Encryption;
-using System.Runtime.InteropServices;
 using NUnit.Framework;
-using System.Threading.Tasks;
 
 namespace SharpTox.Test
 {
@@ -177,7 +175,8 @@ namespace SharpTox.Test
             tox2.Dispose();
         }
 
-        [Test, Timeout(120000), Ignore]
+        [Test, Ignore("")]
+        [MaxTime(10000)]
         public void TestToxProxySocks5()
         {
             var options = new ToxOptions(true, ToxProxyType.Socks5, "127.0.0.1", 9050);

@@ -16,7 +16,8 @@ namespace SharpTox.Test
         private ToxAv _toxAv1;
         private ToxAv _toxAv2;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
+        [MaxTime(10000)]
         public void Init()
         {
             var options = new ToxOptions(true, true);
@@ -48,7 +49,7 @@ namespace SharpTox.Test
             while (!answered) { DoIterate(); }
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void Cleanup()
         {
             _running = false;
