@@ -11,7 +11,6 @@ namespace SharpTox.Test
     [TestFixture]
     public class CoreFriendTests
     {
-        private bool _running = true;
         private Tox _tox1;
         private Tox _tox2;
 
@@ -34,8 +33,6 @@ namespace SharpTox.Test
         [OneTimeTearDown]
         public void Cleanup()
         {
-            _running = false;
-
             _tox1.Dispose();
             _tox2.Dispose();
         }

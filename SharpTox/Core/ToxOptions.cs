@@ -132,6 +132,17 @@ namespace SharpTox.Core
             _options.ProxyPort = (ushort)proxyPort;
         }
 
+        public override bool Equals(object obj)
+        {
+            if (obj is ToxOptions other) {
+                return this.Struct.Equals(other.Struct);
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode() => base.GetHashCode();
+
         public static bool operator ==(ToxOptions options1, ToxOptions options2)
         {
             return options1.Struct.Equals(options2.Struct);

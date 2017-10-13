@@ -2,7 +2,6 @@ using System;
 using SharpTox.Core;
 using SharpTox.Av;
 using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace SharpTox.Test
@@ -10,7 +9,6 @@ namespace SharpTox.Test
     [TestFixture]
     public class AvFriendTests
     {
-        private bool _running = true;
         private Tox _tox1;
         private Tox _tox2;
         private ToxAv _toxAv1;
@@ -52,8 +50,6 @@ namespace SharpTox.Test
         [OneTimeTearDown]
         public void Cleanup()
         {
-            _running = false;
-
             _toxAv1.Dispose();
             _toxAv2.Dispose();
 
