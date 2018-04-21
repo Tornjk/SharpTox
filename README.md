@@ -8,6 +8,11 @@ Tox is a free (as in freedom) Skype replacement.
 
 Feel free to contribute!
 
+## Outdated
+
+This version of SharpTox in this repository targeted libtox of version 0.1.X.
+The current version of libtox (0.2.2) is not supported.
+
 ### Things you'll need
 
 * The libtox library, you should compile that yourself from the [ProjectTox GitHub repo](https://github.com/irungentoo/ProjectTox-Core "Tox Github repo"). Guidelines on how to do this can be found [here](https://github.com/irungentoo/toxcore/blob/master/INSTALL.md "Crosscompile guidelines"). If you don't feel like compiling this yourself, you can find automatic builds for windows here: [x86](https://build.tox.chat/view/libtoxcore/job/libtoxcore-toktok_build_windows_x86_shared_release/ "x86 dll") or [x64](https://build.tox.chat/view/libtoxcore/job/libtoxcore-toktok_build_windows_x86-64_shared_release/ "x64 dll")
