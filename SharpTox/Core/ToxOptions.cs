@@ -191,6 +191,9 @@ namespace SharpTox.Core
         [MarshalAs(UnmanagedType.I1)]
         internal bool UdpEnabled;
 
+        [MarshalAs(UnmanagedType.I1)]
+        internal bool LocalDiscoveryEnabled;
+
         internal ToxProxyType ProxyType;
 
         [MarshalAs(UnmanagedType.LPStr)]
@@ -200,6 +203,9 @@ namespace SharpTox.Core
         internal ushort StartPort;
         internal ushort EndPort;
         internal ushort TcpPort;
+
+        [MarshalAs(UnmanagedType.I1)]
+        internal bool HolePunchingEnabled;
 
         internal ToxSaveDataType SaveDataType;
         internal IntPtr SaveData;

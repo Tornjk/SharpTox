@@ -8,10 +8,13 @@ Tox is a free (as in freedom) Skype replacement.
 
 Feel free to contribute!
 
-## Outdated
+## Remarks
 
-This version of SharpTox in this repository targeted libtox of version 0.1.X.
-The current version of libtox (0.2.2) is not supported.
+I do not really maintain this version of SharpTox! I aim to have a base to play with and be able to use the basic features of Tox in C#!
+
+Feel free to contribute but do not expect a working version!
+
+The current version I program against is 0.2.3 of toxcore.
 
 ### Things you'll need
 
