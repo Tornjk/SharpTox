@@ -798,11 +798,11 @@ namespace SharpTox.Core
         /// Retrieves the private key of this Tox instance.
         /// </summary>
         /// <returns>The private key of this Tox instance.</returns>
-        public ToxKey GetPrivateKey()
+        public ToxKey GetSecretKey()
         {
             ThrowIfDisposed();
 
-            byte[] key = new byte[ToxConstants.PublicKeySize];
+            byte[] key = new byte[ToxConstants.SecretKeySize];
             ToxFunctions.SelfGetSecretKey(_tox, key);
 
             return new ToxKey(ToxKeyType.Secret, key);

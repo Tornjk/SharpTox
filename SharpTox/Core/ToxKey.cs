@@ -7,7 +7,7 @@ namespace SharpTox.Core
     /// </summary>
     public class ToxKey
     {
-        private byte[] _key;
+        private readonly byte[] _key;
 
         /// <summary>
         /// The key type (either public or secret).
@@ -40,19 +40,13 @@ namespace SharpTox.Core
         /// Retrieves a byte array of the tox key.
         /// </summary>
         /// <returns></returns>
-        public byte[] GetBytes()
-        {
-            return _key;
-        }
+        public byte[] GetBytes() => (byte[])_key.Clone();
 
         /// <summary>
         /// Retrieves a string of the tox key.
         /// </summary>
         /// <returns></returns>
-        public string GetString()
-        {
-            return ToxTools.HexBinToString(_key);
-        }
+        public string GetString() => ToxTools.HexBinToString(_key);
 
         public static bool operator ==(ToxKey key1, ToxKey key2)
         {
@@ -82,14 +76,8 @@ namespace SharpTox.Core
             return this == key;
         }
 
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
+        public override int GetHashCode() => base.GetHashCode();
 
-        public override string ToString()
-        {
-            return ToxTools.HexBinToString(_key);
-        }
+        public override string ToString() => ToxTools.HexBinToString(_key);
     }
 }

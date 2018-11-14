@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using SharpTox.Core;
@@ -56,10 +56,11 @@ namespace SharpTox.Test
         public void TestToxLoadSecretKey()
         {
             var tox1 = new Tox(ToxOptions.Default);
-            var key1 = tox1.GetPrivateKey();
+            var key1 = tox1.GetSecretKey();
+            var key1d = tox1.GetSecretKey();
 
             var tox2 = new Tox(ToxOptions.Default, key1);
-            var key2 = tox2.GetPrivateKey();
+            var key2 = tox2.GetSecretKey();
 
             if (key1 != key2)
                 Assert.Fail("Private keys do not match");
