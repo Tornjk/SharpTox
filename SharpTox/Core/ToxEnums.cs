@@ -740,7 +740,7 @@
         Av
     }
 
-    internal enum ToxSaveDataType
+    internal enum ToxSavedataType
     {
         None,
         ToxSave,

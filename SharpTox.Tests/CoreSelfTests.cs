@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using SharpTox.Core;
@@ -208,6 +208,9 @@ namespace SharpTox.Test
             string message = "Hey, this is a test friend request.";
             bool testFinished = false;
 
+            Bootstrap(tox1);
+            Bootstrap(tox2);
+
             tox1.AddFriend(tox2.Id, message, out error);
             if (error != ToxErrorFriendAdd.Ok)
                 Assert.Fail("Failed to add friend: {0}", error);
@@ -227,12 +230,15 @@ namespace SharpTox.Test
                 testFinished = true;
             };
 
+            tox1.Start();
+            tox2.Start();
+
             while (!testFinished && tox1.GetFriendConnectionStatus(0) == ToxConnectionStatus.None)
             {
-                int time1 = tox1.Iterate();
-                int time2 = tox2.Iterate();
+                //int time1 = tox1.Iterate();
+                //int time2 = tox2.Iterate();
 
-                Thread.Sleep(Math.Min(time1, time2));
+                Thread.Sleep(50);
             }
 
             tox1.Dispose();
@@ -253,7 +259,7 @@ namespace SharpTox.Test
             if (data == null || !data.TryParse(out info))
                 Assert.Fail("Parsing the data file failed");
 
-            if (info.Id != tox.Id || info.Name != tox.Name || info.SecretKey != tox.GetPrivateKey() || info.Status != tox.Status || info.StatusMessage != tox.StatusMessage)
+            if (info.Id != tox.Id || info.Name != tox.Name || info.SecretKey != tox.GetSecretKey() || info.Status != tox.Status || info.StatusMessage != tox.StatusMessage)
                 Assert.Fail("Parsing the data file failed");
 
             tox.Dispose();
@@ -266,6 +272,18 @@ namespace SharpTox.Test
             var data = tox.GetData();
 
             Assert.IsFalse(data.IsEncrypted);
+        }
+        
+        private static void Bootstrap(Tox tox)
+        {
+            foreach(var node in Globals.Nodes)
+            {
+                var success = tox.Bootstrap(node);
+                if (!success)
+                {
+                    throw new Exception("Bootstrap not successful");
+                }
+            }
         }
     }
 }

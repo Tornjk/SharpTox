@@ -3,6 +3,101 @@ using System.Runtime.InteropServices;
 
 namespace SharpTox.Core
 {
+    public sealed class ToxOptionsN
+    {
+        private readonly ToxOptionsHandle options;
+
+        public ToxOptionsN()
+        {
+            var err = ToxErrorOptionsNew.Ok;
+            this.options = ToxFunctions.Options.OptionsNew(ref err);
+
+            if (err != ToxErrorOptionsNew.Ok)
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        public bool Ipv6Enabled {
+            get => ToxFunctions.Options.GetIpv6Enabled(this.options);
+            set => ToxFunctions.Options.SetIpv6Enabled(this.options, value);
+        }
+
+        public bool UdpEnabled {
+            get => ToxFunctions.Options.GetUdpEnabled(this.options);
+            set => ToxFunctions.Options.SetUdpEnabled(this.options, value);
+        }
+
+        public bool LocalDiscoveryEnabled {
+            get => ToxFunctions.Options.GetLocalDiscoveryEnabled(this.options);
+            set => ToxFunctions.Options.SetLocalDiscoveryEnabled(this.options, value);
+        }
+
+        public ToxProxyType ProxyType {
+            get => ToxFunctions.Options.GetProxyType(this.options);
+            set => ToxFunctions.Options.SetProxyType(this.options, value);
+        }
+
+        public string ProxyHost {
+            get => ToxFunctions.Options.GetProxyHost(this.options);
+            set => ToxFunctions.Options.SetProxyHost(this.options, value);
+        }
+
+        public ushort ProxyPort {
+            get => ToxFunctions.Options.GetProxyPort(this.options);
+            set => ToxFunctions.Options.SetProxyPort(this.options, value);
+        }
+
+        public ushort StartPort {
+            get => ToxFunctions.Options.GetStartPort(this.options);
+            set => ToxFunctions.Options.SetStartPort(this.options, value);
+        }
+
+        public ushort EndPort {
+            get => ToxFunctions.Options.GetEndPort(this.options);
+            set => ToxFunctions.Options.SetEndPort(this.options, value);
+        }
+
+        public ushort TcpPort {
+            get => ToxFunctions.Options.GetTcpPort(this.options);
+            set => ToxFunctions.Options.SetTcpPort(this.options, value);
+        }
+
+        public bool HolePunchingEnabled {
+            get => ToxFunctions.Options.GetHolePunchingEnabled(this.options);
+            set => ToxFunctions.Options.SetHolePunchingEnabled(this.options, value);
+        }
+
+        internal ToxSavedataType SavedataType {
+            get => ToxFunctions.Options.GetSavedataType(this.options);
+        }
+
+        internal byte[] Savedata {
+            get {
+                var bytes = new byte[ToxFunctions.Options.GetSavedataLength(this.options)];
+                var ptr = ToxFunctions.Options.GetSavedataData(this.options);
+                Marshal.Copy(ptr, bytes, 0, bytes.Length);
+                return bytes;
+            }
+        }
+
+        internal void SetData(byte[] data, ToxSavedataType type)
+        {
+            if(data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
+            if (type == ToxSavedataType.SecretKey && data.Length != ToxConstants.SecretKeySize)
+                throw new ArgumentException("Data must have a length of ToxConstants.SecretKeySize bytes", nameof(data));
+
+            ToxFunctions.Options.SetSavedataType(this.options, type);
+
+            var ptr = Marshal.AllocHGlobal(data.Length);
+            Marshal.Copy(data, 0, ptr, data.Length);
+            ToxFunctions.Options.SetSavedataData(this.options, ptr, (uint)data.Length);
+        }
+    }
     /// <summary>
     /// Represents settings to be used by an instance of tox.
     /// </summary>
@@ -16,8 +111,7 @@ namespace SharpTox.Core
         /// <summary>
         /// Whether or not IPv6 should be enabled.
         /// </summary>
-        public bool Ipv6Enabled
-        {
+        public bool Ipv6Enabled {
             get { return _options.Ipv6Enabled; }
             set { _options.Ipv6Enabled = value; }
         }
@@ -25,8 +119,7 @@ namespace SharpTox.Core
         /// <summary>
         /// Whether or not UDP should be enabled.
         /// </summary>
-        public bool UdpEnabled
-        {
+        public bool UdpEnabled {
             get { return _options.UdpEnabled; }
             set { _options.UdpEnabled = value; }
         }
@@ -34,8 +127,7 @@ namespace SharpTox.Core
         /// <summary>
         /// Proxy type.
         /// </summary>
-        public ToxProxyType ProxyType
-        {
+        public ToxProxyType ProxyType {
             get { return _options.ProxyType; }
             set { _options.ProxyType = value; }
         }
@@ -43,8 +135,7 @@ namespace SharpTox.Core
         /// <summary>
         /// Proxy ip or domain.
         /// </summary>
-        public string ProxyHost
-        {
+        public string ProxyHost {
             get { return _options.ProxyHost; }
             set { _options.ProxyHost = value; }
         }
@@ -53,8 +144,7 @@ namespace SharpTox.Core
         /// Proxy port, in host byte order.
         /// Underlying type is ushort, don't exceed ushort.MaxValue.
         /// </summary>
-        public int ProxyPort
-        {
+        public int ProxyPort {
             get { return _options.ProxyPort; }
             set { _options.ProxyPort = (ushort)value; }
         }
@@ -63,8 +153,7 @@ namespace SharpTox.Core
         /// The start port of the inclusive port range to attempt to use.
         /// Underlying type is ushort, don't exceed ushort.MaxValue.
         /// </summary>
-        public int StartPort
-        {
+        public int StartPort {
             get { return _options.StartPort; }
             set { _options.StartPort = (ushort)value; }
         }
@@ -73,8 +162,7 @@ namespace SharpTox.Core
         /// The end port of the inclusive port range to attempt to use.
         /// Underlying type is ushort, don't exceed ushort.MaxValue.
         /// </summary>
-        public int EndPort
-        {
+        public int EndPort {
             get { return _options.EndPort; }
             set { _options.EndPort = (ushort)value; }
         }
@@ -83,8 +171,7 @@ namespace SharpTox.Core
         /// The port to use for a TCP server. This can be disabled by assigning 0.
         /// Underlying type is ushort, don't exceed ushort.MaxValue.
         /// </summary>
-        public int TcpPort
-        {
+        public int TcpPort {
             get { return _options.TcpPort; }
             set { _options.TcpPort = (ushort)value; }
         }
@@ -134,7 +221,8 @@ namespace SharpTox.Core
 
         public override bool Equals(object obj)
         {
-            if (obj is ToxOptions other) {
+            if (obj is ToxOptions other)
+            {
                 return this.Struct.Equals(other.Struct);
             }
 
@@ -155,21 +243,25 @@ namespace SharpTox.Core
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    [Obsolete(DeprecatedMessage, false)]
     internal struct ToxOptionsStruct
     {
-        internal static ToxOptionsStruct Default
-        {
-            get
-            {
+        const string DeprecatedMessage = @"The memory layout of this struct (size, alignment, and field
+order) is not part of the ABI. To remain compatible, prefer to use tox_options_new to
+allocate the object and accessor functions to set the members. The struct
+will become opaque (i.e. the definition will become private) in v0.3.0.";
+
+        public static ToxOptionsStruct Default {
+            get {
                 ToxOptionsStruct options = new ToxOptionsStruct();
                 ToxFunctions.OptionsDefault(ref options);
                 return options;
             }
         }
 
-        internal void SetData(byte[] data, ToxSaveDataType type)
+        public void SetData(byte[] data, ToxSavedataType type)
         {
-            if (type == ToxSaveDataType.SecretKey && data.Length != ToxConstants.SecretKeySize)
+            if (type == ToxSavedataType.SecretKey && data.Length != ToxConstants.SecretKeySize)
                 throw new ArgumentException("Data must have a length of ToxConstants.SecretKeySize bytes", "data");
 
             SaveDataType = type;
@@ -179,36 +271,36 @@ namespace SharpTox.Core
             Marshal.Copy(data, 0, SaveData, data.Length);
         }
 
-        internal void Free()
+        public void Free()
         {
             if (SaveData != IntPtr.Zero)
                 Marshal.FreeHGlobal(SaveData);
         }
 
         [MarshalAs(UnmanagedType.I1)]
-        internal bool Ipv6Enabled;
+        public Boolean Ipv6Enabled;
 
         [MarshalAs(UnmanagedType.I1)]
-        internal bool UdpEnabled;
+        public Boolean UdpEnabled;
 
         [MarshalAs(UnmanagedType.I1)]
-        internal bool LocalDiscoveryEnabled;
+        public Boolean LocalDiscoveryEnabled;
 
-        internal ToxProxyType ProxyType;
+        public ToxProxyType ProxyType;
 
         [MarshalAs(UnmanagedType.LPStr)]
-        internal string ProxyHost;
+        public String ProxyHost;
 
-        internal ushort ProxyPort;
-        internal ushort StartPort;
-        internal ushort EndPort;
-        internal ushort TcpPort;
+        public UInt16 ProxyPort;
+        public UInt16 StartPort;
+        public UInt16 EndPort;
+        public UInt16 TcpPort;
 
         [MarshalAs(UnmanagedType.I1)]
-        internal bool HolePunchingEnabled;
+        public Boolean HolePunchingEnabled;
 
-        internal ToxSaveDataType SaveDataType;
-        internal IntPtr SaveData;
-        internal uint SaveDataLength;
+        public ToxSavedataType SaveDataType;
+        public IntPtr SaveData;
+        public UInt32 SaveDataLength;
     }
 }

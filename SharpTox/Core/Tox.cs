@@ -198,7 +198,7 @@ namespace SharpTox.Core
             var optionsStruct = options.Struct;
 
             if (secretKey != null)
-                optionsStruct.SetData(secretKey.GetBytes(), ToxSaveDataType.SecretKey);
+                optionsStruct.SetData(secretKey.GetBytes(), ToxSavedataType.SecretKey);
 
             _tox = ToxFunctions.New(ref optionsStruct, ref error);
 
@@ -222,7 +222,7 @@ namespace SharpTox.Core
             var optionsStruct = options.Struct;
             var error = ToxErrorNew.Ok;
 
-            optionsStruct.SetData(data.Bytes, ToxSaveDataType.ToxSave);
+            optionsStruct.SetData(data.Bytes, ToxSavedataType.ToxSave);
             _tox = ToxFunctions.New(ref optionsStruct, ref error);
 
             if (_tox == null || _tox.IsInvalid || error != ToxErrorNew.Ok)
@@ -254,7 +254,7 @@ namespace SharpTox.Core
             var decryptError = ToxErrorDecryption.Ok;
 
             byte[] decryptedData = ToxEncryption.DecryptData(data.Bytes, key, out decryptError);
-            optionsStruct.SetData(decryptedData, ToxSaveDataType.ToxSave);
+            optionsStruct.SetData(decryptedData, ToxSavedataType.ToxSave);
             _tox = ToxFunctions.New(ref optionsStruct, ref error);
 
             if (_tox == null || _tox.IsInvalid || error != ToxErrorNew.Ok || decryptError != ToxErrorDecryption.Ok)
@@ -286,7 +286,7 @@ namespace SharpTox.Core
             var decryptError = ToxErrorDecryption.Ok;
 
             byte[] decryptedData = ToxEncryption.DecryptData(data.Bytes, password, out decryptError);
-            optionsStruct.SetData(decryptedData, ToxSaveDataType.ToxSave);
+            optionsStruct.SetData(decryptedData, ToxSavedataType.ToxSave);
             _tox = ToxFunctions.New(ref optionsStruct, ref error);
 
             if (_tox == null || _tox.IsInvalid || error != ToxErrorNew.Ok || decryptError != ToxErrorDecryption.Ok)

@@ -22,6 +22,20 @@ namespace SharpTox.Core
         }
     }
 
+    public class ToxOptionsHandle : SafeHandleZeroOrMinusOneIsInvalid
+    {
+        private ToxOptionsHandle() : base(true)
+        {
+        }
+
+        protected override bool ReleaseHandle()
+        {
+            ToxFunctions.Options.Free(handle);
+            return true;
+        }
+    }
+
+
     /// <summary>
     /// Provides a base class for Win32 safe handle implementations in which the value of either 0 or -1 indicates an invalid handle.
     /// </summary>

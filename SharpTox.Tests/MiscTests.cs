@@ -31,7 +31,7 @@ namespace SharpTox.Test
             tox.Dispose();
         }
 
-        [Test, MaxTime(120000)]
+        [Test, MaxTime(12000)]
         public void TestToxBootstrapAndConnectTcp()
         {
             var tox = new Tox(new ToxOptions(true, false));
