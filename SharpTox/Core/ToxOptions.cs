@@ -10,7 +10,7 @@ namespace SharpTox.Core
         public ToxOptionsN()
         {
             var err = ToxErrorOptionsNew.Ok;
-            this.options = ToxFunctions.Options.OptionsNew(ref err);
+            this.options = ToxFunctions.Options.New(ref err);
 
             if (err != ToxErrorOptionsNew.Ok)
             {
@@ -80,6 +80,12 @@ namespace SharpTox.Core
                 return bytes;
             }
         }
+
+        /// <summary>
+        /// Apply the default options to the ToxOptions
+        /// </summary>
+        public void ApplyDefault()
+            => ToxFunctions.Options.Default(this.options);
 
         internal void SetData(byte[] data, ToxSavedataType type)
         {

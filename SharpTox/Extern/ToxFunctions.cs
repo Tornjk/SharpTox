@@ -10,17 +10,17 @@ namespace SharpTox.Core
     internal static class ToxFunctions
     {
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_version_major")]
-        public static extern uint VersionMajor();
+        public static extern UInt32 VersionMajor();
 
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_version_minor")]
-        public static extern uint VersionMinor();
+        public static extern UInt32 VersionMinor();
 
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_version_patch")]
-        public static extern uint VersionPatch();
+        public static extern UInt32 VersionPatch();
 
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_version_is_compatible")]
         [return: MarshalAs(UnmanagedType.I1)]
-        public static extern bool VersionIsCompatible(uint major, uint minor, uint patch);
+        public static extern Boolean VersionIsCompatible(UInt32 major, UInt32 minor, UInt32 patch);
 
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_name_length")]
         public static extern UInt32 GetMaxNameLength();
@@ -43,16 +43,16 @@ namespace SharpTox.Core
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_hostname_length")]
         public static extern UInt32 GetMaxHostnameLength();
 
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_new")]
-        public static extern ToxHandle New(ToxOptionsHandle options, ref ToxErrorNew error);
-
         public static class Options
         {
             [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_options_new")]
-            public static extern ToxOptionsHandle OptionsNew(ref ToxErrorOptionsNew error);
+            public static extern ToxOptionsHandle New(ref ToxErrorOptionsNew error);
 
             [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_options_free")]
             public static extern void Free(IntPtr options);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_options_default")]
+            public static extern void Default(ToxOptionsHandle options);
 
             [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_options_get_ipv6_enabled")]
             [return: MarshalAs(UnmanagedType.I1)]
@@ -138,12 +138,21 @@ namespace SharpTox.Core
             public static extern void SetSavedataLength(ToxOptionsHandle options, SizeT length);
         }
 
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_options_default")]
-        public static extern void OptionsDefault(ref ToxOptionsStruct options);
+        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_new")]
+        public static extern ToxHandle New(ToxOptionsHandle options, ref ToxErrorNew error);
+
+        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_kill")]
+        public static extern void Kill(IntPtr tox);
+
+        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_get_savedata_size")]
+        public static extern SizeT GetSaveDataSize(ToxHandle tox);
+
+        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_get_savedata")]
+        public static extern void GetSaveData(ToxHandle tox, Byte[] bytes);
 
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_bootstrap")]
         [return: MarshalAs(UnmanagedType.I1)]
-        public static extern bool Bootstrap(ToxHandle tox, string host, ushort port, byte[] publicKey, ref ToxErrorBootstrap error);
+        public static extern bool Bootstrap(ToxHandle tox, String host, UInt16 port, Byte[] publicKey, ref ToxErrorBootstrap error);
 
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_self_get_connection_status")]
         public static extern ToxConnectionStatus SelfGetConnectionStatus(ToxHandle tox);
@@ -163,9 +172,6 @@ namespace SharpTox.Core
 
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_iteration_interval")]
         public static extern uint IterationInterval(ToxHandle tox);
-
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_kill")]
-        public static extern void Kill(IntPtr tox);
 
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_friend_delete")]
         [return: MarshalAs(UnmanagedType.I1)]
@@ -189,12 +195,6 @@ namespace SharpTox.Core
 
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_self_get_friend_list")]
         public static extern void SelfGetFriendList(ToxHandle tox, uint[] list);
-
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_get_savedata_size")]
-        public static extern uint GetSaveDataSize(ToxHandle tox);
-
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_get_savedata")]
-        public static extern void GetSaveData(ToxHandle tox, byte[] bytes);
 
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_friend_send_message")]
         public static extern uint FriendSendMessage(ToxHandle tox, uint friendNumber, ToxMessageType messageType, byte[] message, uint length, ref ToxErrorSendMessage error);
