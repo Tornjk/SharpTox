@@ -303,7 +303,7 @@
         /// <summary>
         /// The friend number did not designate a valid friend.
         /// </summary>
-        NotFound
+        FriendNotFound
     }
 
     /// <summary>
@@ -590,6 +590,11 @@
         Ok,
 
         /// <summary>
+        /// One of the arguments to the function was NULL when it was not expected.
+        /// </summary>
+        Null,
+
+        /// <summary>
         /// The friend number passed did not designate a valid friend.
         /// </summary>
         FriendNotFound,
@@ -628,7 +633,7 @@
         /// <summary>
         /// File was not in a state where it could be seeked.
         /// </summary>
-        SeekDenied,
+        Denied,
 
         /// <summary>
         /// Seek position was invalid.
@@ -738,6 +743,229 @@
         /// Both text and audio in this groupchat.
         /// </summary>
         Av
+    }
+
+    public enum ToxConferenceType
+    {
+        /// <summary>
+        /// Text-only conference. Accept by tox_conference_join function.
+        /// </summary>
+        Text,
+
+        /// <summary>
+        /// Video conference. Accept by todo: toxav-api
+        /// </summary>
+        Av
+    }
+
+    public enum ToxErrorConferenceNew
+    {
+        /// <summary>
+        /// Function success.
+        /// </summary>
+        Ok,
+
+        /// <summary>
+        /// Instance failed to initialize
+        /// </summary>
+        Init
+    }
+
+    public enum ToxErrorConferenceDelete
+    {
+        /// <summary>
+        /// Success
+        /// </summary>
+        Ok,
+
+        /// <summary>
+        /// The conference number passed did not designate a valid conference
+        /// </summary>
+        ConferenceNotFound
+    }
+
+    public enum ToxErrorConferencePeerQuery
+    {
+        /// <summary>
+        /// Success.
+        /// </summary>
+        Ok,
+
+        /// <summary>
+        /// ConferenceNumber is not valid
+        /// </summary>
+        ConferenceNotFound,
+
+        /// <summary>
+        /// Peer number is not valid
+        /// </summary>
+        PeerNotFound,
+
+        /// <summary>
+        /// The client is not connected to the conference
+        /// </summary>
+        NoConnection
+    }
+
+    public enum ToxErrorConferenceInvite
+    {
+        /// <summary>
+        /// Success
+        /// </summary>
+        Ok,
+
+        /// <summary>
+        /// Not a valid conference number
+        /// </summary>
+        ConferenceNotFound,
+
+        /// <summary>
+        /// The invite packet failed to send.
+        /// </summary>
+        FailSend,
+
+        /// <summary>
+        /// The client is not connected to the conference.
+        /// </summary>
+        NoConnection
+    }
+
+    public enum ToxErrorConferenceJoin
+    {
+        /// <summary>
+        /// Success
+        /// </summary>
+        Ok,
+
+        /// <summary>
+        /// The cookie passed a invalid length.
+        /// </summary>
+        InvalidLength,
+
+        /// <summary>
+        /// The conference is not the expected type. This indicates a invalid cookie.
+        /// </summary>
+        WrongType,
+
+        /// <summary>
+        /// The friend number passed does not a designate a valid friend.
+        /// </summary>
+        FriendNotFound,
+
+        /// <summary>
+        /// Client is already in this conference.
+        /// </summary>
+        Duplicate,
+
+        /// <summary>
+        /// Conference instance failed to initialize.
+        /// </summary>
+        InitFail,
+
+        /// <summary>
+        /// The join packet failed to send.
+        /// </summary>
+        FailSend
+    }
+
+    public enum ToxErrorConferenceSendMessage
+    {
+        /// <summary>
+        /// Success
+        /// </summary>
+        Ok,
+
+        /// <summary>
+        /// The conference number passed did not designate a valid conference
+        /// </summary>
+        ConferenceNotFound,
+
+        /// <summary>
+        /// The message is too long.
+        /// </summary>
+        TooLong,
+
+        /// <summary>
+        /// The client is not connected to the conference.
+        /// </summary>
+        NoConnection,
+
+        /// <summary>
+        /// The message packet failed to send.
+        /// </summary>
+        FailSend
+    }
+
+    public enum ToxErrorConferenceTitle
+    {
+        /// <summary>
+        /// Success
+        /// </summary>
+        Ok,
+
+        /// <summary>
+        /// The conference number passed did not designate a valid conference
+        /// </summary>
+        ConferenceNotFound,
+
+        /// <summary>
+        /// The title is too long or empty.
+        /// </summary>
+        InvalidLength,
+
+        /// <summary>
+        /// The title packet failed to send.
+        /// </summary>
+        FailSend
+    }
+
+    public enum ToxErrorConferenceGetType
+    {
+        /// <summary>
+        /// Success
+        /// </summary>
+        Ok,
+
+        /// <summary>
+        /// The conference number passed did not designate a valid conference
+        /// </summary>
+        ConferenceNotFound
+    }
+
+    public enum ToxErrorConferenceById
+    {
+        /// <summary>
+        /// Success
+        /// </summary>
+        Ok,
+
+        /// <summary>
+        /// One of the arguments to the function was NULL when it was not expected.
+        /// </summary>
+        Null,
+
+        /// <summary>
+        /// No conference with the given id exists on the conference list.
+        /// </summary>
+        NotFound
+    }
+
+    public enum ToxErrorConferenceByUid
+    {
+        /// <summary>
+        /// Success
+        /// </summary>
+        Ok,
+
+        /// <summary>
+        /// One of the arguments to the function was NULL when it was not expected.
+        /// </summary>
+        Null,
+
+        /// <summary>
+        /// No conference with the given uid exists on the conference list.
+        /// </summary>
+        NotFound
     }
 
     internal enum ToxSavedataType
