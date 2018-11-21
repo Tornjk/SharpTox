@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace SharpTox.Core
 {
-    public sealed class ToxOptionsN
+    public sealed class ToxOptionsN : IDisposable
     {
         private readonly ToxOptionsHandle options;
 
@@ -68,6 +68,18 @@ namespace SharpTox.Core
             set => ToxFunctions.Options.SetHolePunchingEnabled(this.options, value);
         }
 
+        internal ToxHandle Create()
+        {
+            var err = ToxErrorNew.Ok;
+            var tox = ToxFunctions.New(this.options, ref err);
+            if (tox == null || tox.IsInvalid || err != ToxErrorNew.Ok)
+            {
+                throw new Exception("Could not create a new instance of tox, error: " + err.ToString());
+            }
+
+            return tox;
+        }
+
         internal ToxSavedataType SavedataType {
             get => ToxFunctions.Options.GetSavedataType(this.options);
         }
@@ -89,7 +101,7 @@ namespace SharpTox.Core
 
         internal void SetData(byte[] data, ToxSavedataType type)
         {
-            if(data == null)
+            if (data == null)
             {
                 throw new ArgumentNullException(nameof(data));
             }
@@ -102,6 +114,11 @@ namespace SharpTox.Core
             var ptr = Marshal.AllocHGlobal(data.Length);
             Marshal.Copy(data, 0, ptr, data.Length);
             ToxFunctions.Options.SetSavedataData(this.options, ptr, (uint)data.Length);
+        }
+
+        public void Dispose()
+        {
+            this.options.Dispose();
         }
     }
     /// <summary>

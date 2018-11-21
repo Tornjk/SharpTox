@@ -10,31 +10,32 @@ namespace SharpTox.Core
         #region Base Classes
         public abstract class FriendBaseEventArgs : EventArgs
         {
-            public int FriendNumber { get; private set; }
+            public uint FriendNumber { get; private set; }
 
-            protected FriendBaseEventArgs(int friendNumber)
+            protected FriendBaseEventArgs(uint friendNumber)
             {
                 FriendNumber = friendNumber;
             }
         }
 
-        public abstract class GroupBaseEventArgs : EventArgs
+        public abstract class ConferenceBaseEventArgs : EventArgs
         {
-            public int GroupNumber { get; private set; }
-            public int PeerNumber { get; private set; }
+            public uint ConferenceNumber { get; }
 
-            protected GroupBaseEventArgs(int groupNumber, int peerNumber)
+            public uint PeerNumber { get; }
+
+            protected ConferenceBaseEventArgs(uint conferenceNumber, uint peerNumber)
             {
-                GroupNumber = groupNumber;
-                PeerNumber = peerNumber;
+                this.ConferenceNumber = conferenceNumber;
+                this.PeerNumber = peerNumber;
             }
         }
 
         public abstract class FileBaseEventArgs : FriendBaseEventArgs
         {
-            public int FileNumber { get; private set; }
+            public uint FileNumber { get; private set; }
 
-            protected FileBaseEventArgs(int friendNumber, int fileNumber)
+            protected FileBaseEventArgs(uint friendNumber, uint fileNumber)
                 : base(friendNumber)
             {
                 FileNumber = fileNumber;
@@ -68,7 +69,7 @@ namespace SharpTox.Core
         {
             public ToxConnectionStatus Status { get; private set; }
 
-            public FriendConnectionStatusEventArgs(int friendNumber, ToxConnectionStatus status)
+            public FriendConnectionStatusEventArgs(uint friendNumber, ToxConnectionStatus status)
                 : base(friendNumber)
             {
                 Status = status;
@@ -81,7 +82,7 @@ namespace SharpTox.Core
 
             public ToxMessageType MessageType { get; private set; }
 
-            public FriendMessageEventArgs(int friendNumber, string message, ToxMessageType type)
+            public FriendMessageEventArgs(uint friendNumber, string message, ToxMessageType type)
                 : base(friendNumber)
             {
                 Message = message;
@@ -93,7 +94,7 @@ namespace SharpTox.Core
         {
             public string Name { get; private set; }
 
-            public NameChangeEventArgs(int friendNumber, string name)
+            public NameChangeEventArgs(uint friendNumber, string name)
                 : base(friendNumber)
             {
                 Name = name;
@@ -104,7 +105,7 @@ namespace SharpTox.Core
         {
             public string StatusMessage { get; private set; }
 
-            public StatusMessageEventArgs(int friendNumber, string statusMessage)
+            public StatusMessageEventArgs(uint friendNumber, string statusMessage)
                 : base(friendNumber)
             {
                 StatusMessage = statusMessage;
@@ -115,7 +116,7 @@ namespace SharpTox.Core
         {
             public ToxUserStatus Status { get; private set; }
 
-            public StatusEventArgs(int friendNumber, ToxUserStatus status)
+            public StatusEventArgs(uint friendNumber, ToxUserStatus status)
                 : base(friendNumber)
             {
                 Status = status;
@@ -126,7 +127,7 @@ namespace SharpTox.Core
         {
             public bool IsTyping { get; private set; }
 
-            public TypingStatusEventArgs(int friendNumber, bool isTyping)
+            public TypingStatusEventArgs(uint friendNumber, bool isTyping)
                 : base(friendNumber)
             {
                 IsTyping = isTyping;
@@ -135,9 +136,9 @@ namespace SharpTox.Core
 
         public class FileControlEventArgs : FileBaseEventArgs
         {
-            public ToxFileControl Control{get;private set;}
+            public ToxFileControl Control { get; private set; }
 
-            public FileControlEventArgs(int friendNumber, int fileNumber, ToxFileControl control)
+            public FileControlEventArgs(uint friendNumber, uint fileNumber, ToxFileControl control)
                 : base(friendNumber, fileNumber)
             {
                 Control = control;
@@ -150,7 +151,7 @@ namespace SharpTox.Core
 
             public int Length { get; set; }
 
-            public FileRequestChunkEventArgs(int friendNumber, int fileNumber, long position, int length)
+            public FileRequestChunkEventArgs(uint friendNumber, uint fileNumber, long position, int length)
                 : base(friendNumber, fileNumber)
             {
                 Position = position;
@@ -160,9 +161,9 @@ namespace SharpTox.Core
 
         public class FriendPacketEventArgs : FriendBaseEventArgs
         {
-            public byte[] Data{get;set;}
+            public byte[] Data { get; set; }
 
-            public FriendPacketEventArgs(int friendNumber, byte[] data)
+            public FriendPacketEventArgs(uint friendNumber, byte[] data)
                 : base(friendNumber)
             {
                 Data = data;
@@ -175,7 +176,7 @@ namespace SharpTox.Core
 
             public long Position { get; private set; }
 
-            public FileChunkEventArgs(int friendNumber, int fileNumber, byte[] data, long position)
+            public FileChunkEventArgs(uint friendNumber, uint fileNumber, byte[] data, long position)
                 : base(friendNumber, fileNumber)
             {
                 Data = data;
@@ -191,7 +192,7 @@ namespace SharpTox.Core
 
             public ToxFileKind FileKind { get; private set; }
 
-            public FileSendRequestEventArgs(int friendNumber, int fileNumber, ToxFileKind kind, long fileSize, string fileName)
+            public FileSendRequestEventArgs(uint friendNumber, uint fileNumber, ToxFileKind kind, long fileSize, string fileName)
                 : base(friendNumber, fileNumber)
             {
                 FileSize = fileSize;
@@ -202,9 +203,9 @@ namespace SharpTox.Core
 
         public class ReadReceiptEventArgs : FriendBaseEventArgs
         {
-            public int Receipt { get; private set; }
+            public uint Receipt { get; }
 
-            public ReadReceiptEventArgs(int friendNumber, int receipt)
+            public ReadReceiptEventArgs(uint friendNumber, uint receipt)
                 : base(friendNumber)
             {
                 Receipt = receipt;
@@ -213,74 +214,85 @@ namespace SharpTox.Core
 
         public class CustomPacketEventArgs : FriendBaseEventArgs
         {
-            public byte[] Packet { get; private set; }
+            public byte[] Packet { get; }
 
-            public CustomPacketEventArgs(int friendNumber, byte[] packet)
+            public CustomPacketEventArgs(uint friendNumber, byte[] packet)
                 : base(friendNumber)
             {
-                Packet = packet;
+                if (packet == null)
+                {
+                    throw new ArgumentNullException(nameof(packet));
+                }
+
+                Packet = (byte[])packet.Clone();
             }
         }
 
-        public class GroupInviteEventArgs : FriendBaseEventArgs
+        public class ConferenceInviteEventArgs : FriendBaseEventArgs
         {
-            public byte[] Data { get; private set; }
+            public byte[] Data { get; }
 
-            public ToxGroupType GroupType { get; private set; }
+            public ToxConferenceType ConferenceType { get; }
 
-            public GroupInviteEventArgs(int friendNumber, ToxGroupType type, byte[] data)
+            public ConferenceInviteEventArgs(uint friendNumber, ToxConferenceType type, byte[] data)
                 : base(friendNumber)
             {
                 if (data == null)
-                    throw new ArgumentNullException("data");
+                {
+                    throw new ArgumentNullException(nameof(data));
+                }
 
-                Data = (byte[])data.Clone();
-                GroupType = type;
+                this.Data = (byte[])data.Clone();
+                this.ConferenceType = type;
             }
         }
 
-        public class GroupMessageEventArgs : GroupBaseEventArgs
+        public class ConferenceMessageEventArgs : ConferenceBaseEventArgs
         {
-            public string Message { get; private set; }
+            public string Message { get; }
 
-            public GroupMessageEventArgs(int groupNumber, int peerNumber, string message)
-                : base(groupNumber, peerNumber)
+            public ToxMessageType Type { get; }
+
+            public ConferenceMessageEventArgs(uint conferenceNumber, uint peerNumber, string message, ToxMessageType type)
+                : base(conferenceNumber, peerNumber)
             {
-                Message = message;
+                this.Message = message;
+                this.Type = type;
             }
         }
 
-        public class GroupActionEventArgs : GroupBaseEventArgs
+        public class ConferenceTitleEventArgs : ConferenceBaseEventArgs
         {
-            public string Action { get; private set; }
+            public string Title { get; }
 
-            public GroupActionEventArgs(int groupNumber, int peerNumber, string action)
-                : base(groupNumber, peerNumber)
+            public ConferenceTitleEventArgs(uint conferenceNumber, uint peerNumber, string title) : base(conferenceNumber, peerNumber)
+                => this.Title = title;
+        }
+
+        public class ConferencePeerNameEventArgs : ConferenceBaseEventArgs
+        {
+            public string Name { get; }
+
+            public ConferencePeerNameEventArgs(uint conferenceNumber, uint peerNumber, string name) : base(conferenceNumber, peerNumber)
             {
-                Action = action;
+                this.Name = name;
             }
         }
 
-        public class GroupNamelistChangeEventArgs : GroupBaseEventArgs
+        public class ConferenceConnectedEventArgs : EventArgs
         {
-            public ToxChatChange Change { get; private set; }
+            public uint ConferenceNumber { get; }
 
-            public GroupNamelistChangeEventArgs(int groupNumber, int peerNumber, ToxChatChange change)
-                : base(groupNumber, peerNumber)
-            {
-                Change = change;
-            }
+            public ConferenceConnectedEventArgs(uint conferenceNumber)
+                => this.ConferenceNumber = conferenceNumber;
         }
 
-        public class GroupTitleEventArgs : GroupBaseEventArgs
+        public class ConferencePeerListEventArgs : EventArgs
         {
-            public string Title { get; private set; }
+            public uint ConferenceNumber { get; }
 
-            public GroupTitleEventArgs(int groupNumber, int peerNumber, string title)
-                : base(groupNumber, peerNumber)
-            {
-                Title = title;
-            }
+            public ConferencePeerListEventArgs(uint conferenceNumber)
+                => this.ConferenceNumber = conferenceNumber;
         }
     }
 }

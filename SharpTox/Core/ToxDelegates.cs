@@ -7,7 +7,12 @@ namespace SharpTox.Core
     static class ToxDelegates
     {
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void CallbackFriendMessageDelegate(ToxHandle tox, UInt32 friendNumber, ToxMessageType type, [In, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 4)] Byte[] message, SizeT length, IntPtr userData);
+        public delegate void CallbackFriendMessageDelegate(ToxHandle tox,
+                                                           UInt32 friendNumber,
+                                                           ToxMessageType type,
+                                                           [In, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 4)] Byte[] message,
+                                                           SizeT length,
+                                                           IntPtr userData);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void CallbackFriendRequestDelegate(ToxHandle tox, [MarshalAs(UnmanagedType.LPArray, SizeConst = ToxConstants.PublicKeySize)] Byte[] publicKey, [In, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 3)] Byte[] message, SizeT length, IntPtr userData);

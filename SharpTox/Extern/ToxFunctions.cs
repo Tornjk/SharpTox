@@ -9,39 +9,45 @@ namespace SharpTox.Core
     /// </summary>
     static class ToxFunctions
     {
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_version_major")]
-        public static extern UInt32 VersionMajor();
+        public static class Version
+        {
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_version_major")]
+            public static extern UInt32 Major();
 
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_version_minor")]
-        public static extern UInt32 VersionMinor();
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_version_minor")]
+            public static extern UInt32 Minor();
 
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_version_patch")]
-        public static extern UInt32 VersionPatch();
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_version_patch")]
+            public static extern UInt32 Patch();
 
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_version_is_compatible")]
-        [return: MarshalAs(UnmanagedType.I1)]
-        public static extern Boolean VersionIsCompatible(UInt32 major, UInt32 minor, UInt32 patch);
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_version_is_compatible")]
+            [return: MarshalAs(UnmanagedType.I1)]
+            public static extern Boolean IsCompatible(UInt32 major, UInt32 minor, UInt32 patch);
+        }
 
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_name_length")]
-        public static extern UInt32 GetMaxNameLength();
+        public static class Max
+        {
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_name_length")]
+            public static extern UInt32 NameLength();
 
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_status_message_length")]
-        public static extern UInt32 GetMaxStatusMessageLength();
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_status_message_length")]
+            public static extern UInt32 StatusMessageLength();
 
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_friend_request_length")]
-        public static extern UInt32 GetMaxFriendRequestLength();
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_friend_request_length")]
+            public static extern UInt32 FriendRequestLength();
 
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_message_length")]
-        public static extern UInt32 GetMaxMessageLength();
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_message_length")]
+            public static extern UInt32 MessageLength();
 
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_custom_packet_size")]
-        public static extern UInt32 GetMaxCustomPacketSize();
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_custom_packet_size")]
+            public static extern UInt32 CustomPacketSize();
 
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_filename_length")]
-        public static extern UInt32 GetMaxFilenameLength();
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_filename_length")]
+            public static extern UInt32 FilenameLength();
 
-        [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_hostname_length")]
-        public static extern UInt32 GetMaxHostnameLength();
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_max_hostname_length")]
+            public static extern UInt32 HostnameLength();
+        }
 
         public static class Options
         {
@@ -228,12 +234,6 @@ namespace SharpTox.Core
 
             [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_self_get_tcp_port")]
             public static extern UInt16 GetTcpPort(ToxHandle tox, ref ToxErrorGetPort error);
-
-            public static class Callback
-            {
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_self_connection_status")]
-                public static extern void ConnectionStatus(ToxHandle tox, ToxDelegates.CallbackConnectionStatusDelegate callback);
-            }
         }
 
         public static class Friend
@@ -298,39 +298,6 @@ namespace SharpTox.Core
             [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_friend_send_lossless_packet")]
             [return: MarshalAs(UnmanagedType.I1)]
             public static extern bool SendLosslessPacket(ToxHandle tox, UInt32 friendNumber, Byte[] data, SizeT length, ref ToxErrorFriendCustomPacket error);
-
-            public static class Callback
-            {
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_name")]
-                public static extern void NameChange(ToxHandle tox, ToxDelegates.CallbackNameChangeDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_status_message")]
-                public static extern void StatusMessageChange(ToxHandle tox, ToxDelegates.CallbackStatusMessageDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_status")]
-                public static extern void StatusChange(ToxHandle tox, ToxDelegates.CallbackUserStatusDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_connection_status")]
-                public static extern void ConnectionStatusChange(ToxHandle tox, ToxDelegates.CallbackFriendConnectionStatusDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_typing")]
-                public static extern void TypingChange(ToxHandle tox, ToxDelegates.CallbackTypingChangeDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_read_receipt")]
-                public static extern void ReadReceipt(ToxHandle tox, ToxDelegates.CallbackReadReceiptDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_request")]
-                public static extern void FriendRequest(ToxHandle tox, ToxDelegates.CallbackFriendRequestDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_message")]
-                public static extern void Message(ToxHandle tox, ToxDelegates.CallbackFriendMessageDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_lossy_packet")]
-                public static extern void LossyPacket(ToxHandle tox, ToxDelegates.CallbackFriendPacketDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_lossless_packet")]
-                public static extern void LosslessPacket(ToxHandle tox, ToxDelegates.CallbackFriendPacketDelegate callback);
-            }
         }
 
         [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_hash")]
@@ -358,20 +325,6 @@ namespace SharpTox.Core
             [return: MarshalAs(UnmanagedType.I1)]
             public static extern Boolean SendChunk(ToxHandle tox, UInt32 friendNumber, UInt32 fileNumber, UInt64 position, Byte[] data, SizeT length, ref ToxErrorFileSendChunk error);
 
-            public static class Callback
-            {
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_file_recv_control")]
-                public static extern void ReceiveControl(ToxHandle tox, ToxDelegates.CallbackFileControlDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_file_chunk_request")]
-                public static extern void ChunkRequest(ToxHandle tox, ToxDelegates.CallbackFileRequestChunkDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_file_recv")]
-                public static extern void Receive(ToxHandle tox, ToxDelegates.CallbackFileReceiveDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_file_recv_chunk")]
-                public static extern void ReceiveChunk(ToxHandle tox, ToxDelegates.CallbackFileReceiveChunkDelegate callback);
-            }
         }
 
         public static class Conference
@@ -452,26 +405,129 @@ namespace SharpTox.Core
             [Obsolete("Use ById instead (exactly the same function, just renamed)")]
             public static extern UInt32 ByUid(ToxHandle tox, Byte[] uid, ref ToxErrorConferenceByUid error);
 
-            public static class Callback
-            {
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_conference_invite")]
-                public static extern void Invite(ToxHandle tox, ToxDelegates.ConferenceInviteDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_conference_connected")]
-                public static extern void Connected(ToxHandle tox, ToxDelegates.ConferenceConnectedDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_conference_message")]
-                public static extern void Message(ToxHandle tox, ToxDelegates.ConferenceMessageDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_conference_title")]
-                public static extern void Title(ToxHandle tox, ToxDelegates.ConferenceTitleDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_conference_peer_name")]
-                public static extern void PeerName(ToxHandle tox, ToxDelegates.ConferencePeerNameDelegate callback);
-
-                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_conference_peer_list_changed")]
-                public static extern void PeerListChanged(ToxHandle tox, ToxDelegates.ConferencePeerListChangedDelegate callback);
-            }
         }
     }
+
+    sealed class ToxCallbackHandler<TEventArgs, TDelegate> where TEventArgs : EventArgs where TDelegate : class
+    {
+        private readonly Action<ToxHandle, TDelegate> register;
+        private readonly Func<Action<TEventArgs>, TDelegate> create;
+
+        private TDelegate tDelegate;
+
+        private event EventHandler<TEventArgs> @event;
+
+        public ToxCallbackHandler(Action<ToxHandle, TDelegate> register, Func<Action<TEventArgs>, TDelegate> create)
+        {
+            this.register = register ?? throw new ArgumentNullException(nameof(register));
+            this.create = create ?? throw new ArgumentNullException(nameof(create));
+        }
+
+        public void Add(Tox tox, EventHandler<TEventArgs> handler)
+        {
+            if (this.tDelegate == null)
+            {
+                this.tDelegate = this.create(args => this.OnCallback(tox, args));
+                this.register(tox.Handle, this.tDelegate);
+            }
+
+            this.@event += handler;
+        }
+
+        public void Remove(Tox tox, EventHandler<TEventArgs> handler)
+        {
+            if (this.@event.GetInvocationList().Length == 1)
+            {
+                this.register(tox.Handle, null);
+                this.tDelegate = null;
+            }
+
+            this.@event -= handler;
+        }
+
+        private void OnCallback(Tox tox, TEventArgs args) => this.@event?.Invoke(tox, args);
+    }
+
+    /// <summary>
+    /// Callbacks of Native tox.h
+    /// </summary>
+    static class ToxCallbacks
+    {
+        public static class Self
+        {
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_self_connection_status")]
+            public static extern void ConnectionStatus(ToxHandle tox, ToxDelegates.CallbackConnectionStatusDelegate callback);
+        }
+
+        public static class Friend
+        {
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_name")]
+            public static extern void NameChange(ToxHandle tox, ToxDelegates.CallbackNameChangeDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_status_message")]
+            public static extern void StatusMessageChange(ToxHandle tox, ToxDelegates.CallbackStatusMessageDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_status")]
+            public static extern void StatusChange(ToxHandle tox, ToxDelegates.CallbackUserStatusDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_connection_status")]
+            public static extern void ConnectionStatusChange(ToxHandle tox, ToxDelegates.CallbackFriendConnectionStatusDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_typing")]
+            public static extern void TypingChange(ToxHandle tox, ToxDelegates.CallbackTypingChangeDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_read_receipt")]
+            public static extern void ReadReceipt(ToxHandle tox, ToxDelegates.CallbackReadReceiptDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_request")]
+            public static extern void FriendRequest(ToxHandle tox, ToxDelegates.CallbackFriendRequestDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_message")]
+            public static extern void Message(ToxHandle tox, ToxDelegates.CallbackFriendMessageDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_lossy_packet")]
+            public static extern void LossyPacket(ToxHandle tox, ToxDelegates.CallbackFriendPacketDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_friend_lossless_packet")]
+            public static extern void LosslessPacket(ToxHandle tox, ToxDelegates.CallbackFriendPacketDelegate callback);
+        }
+
+        public static class File
+        {
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_file_recv_control")]
+            public static extern void ReceiveControl(ToxHandle tox, ToxDelegates.CallbackFileControlDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_file_chunk_request")]
+            public static extern void ChunkRequest(ToxHandle tox, ToxDelegates.CallbackFileRequestChunkDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_file_recv")]
+            public static extern void Receive(ToxHandle tox, ToxDelegates.CallbackFileReceiveDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_file_recv_chunk")]
+            public static extern void ReceiveChunk(ToxHandle tox, ToxDelegates.CallbackFileReceiveChunkDelegate callback);
+        }
+
+        public static class Conference
+        {
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_conference_invite")]
+            public static extern void Invite(ToxHandle tox, ToxDelegates.ConferenceInviteDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_conference_connected")]
+            public static extern void Connected(ToxHandle tox, ToxDelegates.ConferenceConnectedDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_conference_message")]
+            public static extern void Message(ToxHandle tox, ToxDelegates.ConferenceMessageDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_conference_title")]
+            public static extern void Title(ToxHandle tox, ToxDelegates.ConferenceTitleDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_conference_peer_name")]
+            public static extern void PeerName(ToxHandle tox, ToxDelegates.ConferencePeerNameDelegate callback);
+
+            [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "tox_callback_conference_peer_list_changed")]
+            public static extern void PeerListChanged(ToxHandle tox, ToxDelegates.ConferencePeerListChangedDelegate callback);
+        }
+    }
+
+
 }
