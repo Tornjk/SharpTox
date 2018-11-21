@@ -1,9 +1,10 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
+﻿using NUnit.Framework;
 using SharpTox.Core;
 using SharpTox.Encryption;
-using NUnit.Framework;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpTox.Test
 {
@@ -13,122 +14,105 @@ namespace SharpTox.Test
         [Test]
         public void TestToxPortBind()
         {
-            var tox1 = new Tox(new ToxOptions(true, false));
-            var tox2 = new Tox(new ToxOptions(true, true));
+            using (var tox1 = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = false }))
+            using (var tox2 = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = true }))
+            {
+                var error = ToxErrorGetPort.Ok;
+                var port = tox1.GetUdpPort(out error);
+                if (error != ToxErrorGetPort.NotBound)
+                    Assert.Fail("Tox bound to an udp port while it's not supposed to, port: {0}", port);
 
-            var error = ToxErrorGetPort.Ok;
-            int port = tox1.GetUdpPort(out error);
-            if (error != ToxErrorGetPort.NotBound)
-                Assert.Fail("Tox bound to an udp port while it's not supposed to, port: {0}", port);
-
-            port = tox2.GetUdpPort(out error);
-            if (error != ToxErrorGetPort.Ok)
-                Assert.Fail("Failed to bind to an udp port");
-
-            tox1.Dispose();
-            tox2.Dispose();
+                port = tox2.GetUdpPort(out error);
+                if (error != ToxErrorGetPort.Ok)
+                    Assert.Fail("Failed to bind to an udp port");
+            }
         }
 
         [Test]
         public void TestToxLoadData()
         {
-            var tox1 = new Tox(ToxOptions.Default);
-            tox1.Name = "Test";
-            tox1.StatusMessage = "Hey";
+            using (var tox1 = new Tox(ToxOptions.Default()))
+            {
+                tox1.Name = "Test";
+                tox1.StatusMessage = "Hey";
 
-            var data = tox1.GetData();
-            var tox2 = new Tox(ToxOptions.Default, ToxData.FromBytes(data.Bytes));
-
-            if (tox2.Id != tox1.Id)
-                Assert.Fail("Failed to load tox data correctly, tox id's don't match");
-
-            if (tox2.Name != tox1.Name)
-                Assert.Fail("Failed to load tox data correctly, names don't match");
-
-            if (tox2.StatusMessage != tox1.StatusMessage)
-                Assert.Fail("Failed to load tox data correctly, status messages don't match");
-
-            tox1.Dispose();
-            tox2.Dispose();
+                var data = tox1.GetData();
+                using (var tox2 = new Tox(ToxOptions.Default(), ToxData.FromBytes(data.Bytes)))
+                {
+                    Assert.AreEqual(tox1.Id, tox2.Id, "Failed to load tox data correctly, tox id's don't match");
+                    Assert.AreEqual(tox1.Name, tox2.Name, "Failed to load tox data correctly, names don't match");
+                    Assert.AreEqual(tox1.StatusMessage, tox2.StatusMessage, "Failed to load tox data correctly, status messages don't match");
+                }
+            }
         }
 
         [Test]
         public void TestToxLoadSecretKey()
         {
-            var tox1 = new Tox(ToxOptions.Default);
-            var key1 = tox1.GetSecretKey();
-            var key1d = tox1.GetSecretKey();
-
-            var tox2 = new Tox(ToxOptions.Default, key1);
-            var key2 = tox2.GetSecretKey();
-
-            if (key1 != key2)
-                Assert.Fail("Private keys do not match");
+            using (var tox1 = new Tox(ToxOptions.Default()))
+            {
+                var key1 = tox1.GetSecretKey();
+                using (var tox2 = new Tox(ToxOptions.Default(), key1))
+                {
+                    Assert.AreEqual(key1, tox2.GetSecretKey(), "Private keys do not match");
+                }
+            }
         }
 
         [Test]
         public void TestToxSelfName()
         {
-            var tox = new Tox(ToxOptions.Default);
-            string name = "Test name";
-            tox.Name = name;
-
-            if (tox.Name != name)
-                Assert.Fail("Failed to set/retrieve name");
-
-            tox.Dispose();
+            using (var tox = new Tox(ToxOptions.Default()))
+            {
+                string name = "Test name";
+                tox.Name = name;
+                Assert.AreEqual(name, tox.Name, "Failed to set/retrieve name");
+            }
         }
 
         [Test]
         public void TestToxSelfStatusMessage()
         {
-            var tox = new Tox(ToxOptions.Default);
-            string statusMessage = "Test status message";
-            tox.StatusMessage = statusMessage;
-
-            if (tox.StatusMessage != statusMessage)
-                Assert.Fail("Failed to set/retrieve status message");
-
-            tox.Dispose();
+            using (var tox = new Tox(ToxOptions.Default()))
+            {
+                string statusMessage = "Test status message";
+                tox.StatusMessage = statusMessage;
+                Assert.AreEqual(statusMessage, tox.StatusMessage, "Failed to set/retrieve status message");
+            }
         }
 
         [Test]
         public void TestToxSelfStatus()
         {
-            var tox = new Tox(ToxOptions.Default);
-            var status = ToxUserStatus.Away;
-            tox.Status = status;
-
-            if (tox.Status != status)
-                Assert.Fail("Failed to set/retrieve status");
-
-            tox.Dispose();
+            using (var tox = new Tox(ToxOptions.Default()))
+            {
+                var status = ToxUserStatus.Away;
+                tox.Status = status;
+                Assert.AreEqual(status, tox.Status, "Failed to set/retrieve status");
+            }
         }
 
         [Test]
         public void TestToxNospam()
         {
-            var tox = new Tox(ToxOptions.Default);
-            byte[] randomBytes = new byte[sizeof(uint)];
-            new Random().NextBytes(randomBytes);
+            using (var tox = new Tox(ToxOptions.Default()))
+            {
+                byte[] randomBytes = new byte[ToxConstants.NospamSize];
+                new Random().NextBytes(randomBytes);
 
-            int nospam = BitConverter.ToInt32(randomBytes, 0);
-            tox.SetNospam(nospam);
-
-            if (nospam != tox.GetNospam())
-                Assert.Fail("Failed to set/get nospam correctly, values don't match");
-
-            tox.Dispose();
+                int nospam = BitConverter.ToInt32(randomBytes, 0);
+                tox.SetNospam(nospam);
+                Assert.AreEqual(nospam, tox.GetNospam(), "Failed to set/get nospam correctly, values don't match");
+            }
         }
 
         [Test]
         public void TestToxId()
         {
-            var tox = new Tox(ToxOptions.Default);
-            var toxId = new ToxId(tox.Id.PublicKey.GetBytes(), tox.Id.Nospam);
-
-            if (toxId != tox.Id)
-                Assert.Fail("Tox id's are not equal");
+            using (var tox = new Tox(ToxOptions.Default()))
+            {
+                Assert.AreEqual(tox.Id, new ToxId(tox.Id.PublicKey.GetBytes(), tox.Id.Nospam), "Tox id's are not equal");
+            }
         }
 
         [Test]
@@ -151,62 +135,73 @@ namespace SharpTox.Test
         [Test]
         public void TestToxEncryptionLoad()
         {
-            var tox1 = new Tox(ToxOptions.Default);
-            tox1.Name = "Test";
-            tox1.StatusMessage = "Hey";
+            using (var tox1 = new Tox(ToxOptions.Default()))
+            {
+                tox1.Name = "Test";
+                tox1.StatusMessage = "Hey";
 
-            string password = "heythisisatest";
-            var data = tox1.GetData(password);
+                string password = "heythisisatest";
+                var data = tox1.GetData(password);
 
-            Assert.IsNotNull(data, "Failed to encrypt the Tox data");
-            Assert.IsTrue(data.IsEncrypted, "We encrypted the data, but toxencryptsave thinks we didn't");
+                Assert.IsNotNull(data, "Failed to encrypt the Tox data");
+                Assert.IsTrue(data.IsEncrypted, "We encrypted the data, but toxencryptsave thinks we didn't");
 
-            var tox2 = new Tox(ToxOptions.Default, ToxData.FromBytes(data.Bytes), password);
-
-            if (tox2.Id != tox1.Id)
-                Assert.Fail("Failed to load tox data correctly, tox id's don't match");
-
-            if (tox2.Name != tox1.Name)
-                Assert.Fail("Failed to load tox data correctly, names don't match");
-
-            if (tox2.StatusMessage != tox1.StatusMessage)
-                Assert.Fail("Failed to load tox data correctly, status messages don't match");
-
-            tox1.Dispose();
-            tox2.Dispose();
+                using (var tox2 = new Tox(ToxOptions.Default(), ToxData.FromBytes(data.Bytes), password))
+                {
+                    Assert.AreEqual(tox1.Id, tox2.Id, "Failed to load tox data correctly, tox id's don't match");
+                    Assert.AreEqual(tox1.Name, tox2.Name, "Failed to load tox data correctly, names don't match");
+                    Assert.AreEqual(tox1.StatusMessage, tox2.StatusMessage, "Failed to load tox data correctly, status messages don't match");
+                }
+            }
         }
 
-        [Test, Ignore("")]
+        [Test, Ignore("Requires a SOCKS5")]
         [MaxTime(10000)]
-        public void TestToxProxySocks5()
+        public async Task TestToxProxySocks5()
         {
-            var options = new ToxOptions(true, ToxProxyType.Socks5, "127.0.0.1", 9050);
-            var tox = new Tox(options);
-            var error = ToxErrorBootstrap.Ok;
-
-            foreach (var node in Globals.TcpRelays)
+            var options = new ToxOptions
             {
-                bool result = tox.AddTcpRelay(node, out error);
-                if (!result || error != ToxErrorBootstrap.Ok)
-                    Assert.Fail("Failed to bootstrap, error: {0}, result: {1}", error, result);
+                Ipv6Enabled = true,
+                ProxyType = ToxProxyType.Socks5,
+                ProxyHost = "127.0.0.1",
+                ProxyPort = 9050
+            };
+
+            using (var tox = new Tox(options))
+            {
+                var error = ToxErrorBootstrap.Ok;
+
+                foreach (var node in Globals.TcpRelays)
+                {
+                    bool result = tox.AddTcpRelay(node, out error);
+                    if (!result || error != ToxErrorBootstrap.Ok)
+                        Assert.Fail("Failed to bootstrap, error: {0}, result: {1}", error, result);
+                }
+
+                var connected = new TaskCompletionSource<bool>();
+                tox.OnConnectionStatusChanged += (o, e) =>
+                {
+                    connected.SetResult(e.Status != ToxConnectionStatus.None);
+                };
+
+                tox.Start();
+
+                await Task.WhenAny(Task.Delay(10000), connected.Task);
+
+                Assert.True(connected.Task.IsCompleted, "Timeout");
+                Assert.True(await connected.Task);
             }
-
-            tox.Start();
-            while (!tox.IsConnected) { Thread.Sleep(10); }
-
-            Console.WriteLine("Tox connected!");
-            tox.Dispose();
         }
 
         [Test]
+        [Ignore("Todo")]
         public void TestToxFriendRequest()
         {
-            var options = new ToxOptions(true, true);
-            var tox1 = new Tox(options);
-            var tox2 = new Tox(options);
+            var tox1 = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = true });
+            var tox2 = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = true });
             var error = ToxErrorFriendAdd.Ok;
             string message = "Hey, this is a test friend request.";
-            bool testFinished = false;
+            //bool testFinished = false;
 
             Bootstrap(tox1);
             Bootstrap(tox2);
@@ -227,19 +222,19 @@ namespace SharpTox.Test
                 if (!tox2.FriendExists(0))
                     Assert.Fail("Friend doesn't exist according to core");
 
-                testFinished = true;
+                //testFinished = true;
             };
 
             tox1.Start();
             tox2.Start();
 
-            while (!testFinished && tox1.GetFriendConnectionStatus(0) == ToxConnectionStatus.None)
-            {
-                //int time1 = tox1.Iterate();
-                //int time2 = tox2.Iterate();
+            //while (!testFinished && tox1.GetFriendConnectionStatus(0) == ToxConnectionStatus.None)
+            //{
+            //    //int time1 = tox1.Iterate();
+            //    //int time2 = tox2.Iterate();
 
-                Thread.Sleep(50);
-            }
+            //    Thread.Sleep(50);
+            //}
 
             tox1.Dispose();
             tox2.Dispose();
@@ -248,35 +243,35 @@ namespace SharpTox.Test
         [Test]
         public void TestToxDataParsing()
         {
-            var tox = new Tox(ToxOptions.Default);
-            tox.Name = "Test";
-            tox.StatusMessage = "Status";
-            tox.Status = ToxUserStatus.Away;
+            using (var tox = new Tox(ToxOptions.Default()))
+            {
+                tox.Name = "Test";
+                tox.StatusMessage = "Status";
+                tox.Status = ToxUserStatus.Away;
 
-            var data = tox.GetData();
-            ToxDataInfo info = null;
+                var data = tox.GetData();
+                ToxDataInfo info = null;
 
-            if (data == null || !data.TryParse(out info))
-                Assert.Fail("Parsing the data file failed");
+                if (data == null || !data.TryParse(out info))
+                    Assert.Fail("Parsing the data file failed");
 
-            if (info.Id != tox.Id || info.Name != tox.Name || info.SecretKey != tox.GetSecretKey() || info.Status != tox.Status || info.StatusMessage != tox.StatusMessage)
-                Assert.Fail("Parsing the data file failed");
-
-            tox.Dispose();
+                if (info.Id != tox.Id || info.Name != tox.Name || info.SecretKey != tox.GetSecretKey() || info.Status != tox.Status || info.StatusMessage != tox.StatusMessage)
+                    Assert.Fail("Parsing the data file failed");
+            }
         }
 
         [Test]
         public void TestToxIsDataEncrypted()
         {
-            var tox = new Tox(ToxOptions.Default);
-            var data = tox.GetData();
-
-            Assert.IsFalse(data.IsEncrypted);
+            using (var tox = new Tox(ToxOptions.Default()))
+            {
+                Assert.IsFalse(tox.GetData().IsEncrypted);
+            }
         }
-        
+
         private static void Bootstrap(Tox tox)
         {
-            foreach(var node in Globals.Nodes)
+            foreach (var node in Globals.Nodes)
             {
                 var success = tox.Bootstrap(node);
                 if (!success)

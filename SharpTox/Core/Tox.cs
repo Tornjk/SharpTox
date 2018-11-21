@@ -22,7 +22,7 @@ namespace SharpTox.Core
         /// <summary>
         /// Options that are used for this instance of Tox.
         /// </summary>
-        public ToxOptionsN Options { get; }
+        public ToxOptions Options { get; }
 
         /// <summary>
         /// An array of friendnumbers of this Tox instance.
@@ -108,7 +108,7 @@ namespace SharpTox.Core
         /// </summary>
         /// <param name="options">The options to initialize this instance of Tox with.</param>
         /// <param name="secretKey">Optionally, specify the secret key to initialize this instance of Tox with. Must be ToxConstants.SecretKeySize bytes in size.</param>
-        public Tox(ToxOptionsN options, ToxKey secretKey = null)
+        public Tox(ToxOptions options, ToxKey secretKey = null)
         {
             if (secretKey != null)
                 options.SetData(secretKey.GetBytes(), ToxSavedataType.SecretKey);
@@ -126,7 +126,7 @@ namespace SharpTox.Core
         /// </summary>
         /// <param name="options">The options to initialize this instance of Tox with.</param>
         /// <param name="data">A byte array containing Tox save data.</param>
-        public Tox(ToxOptionsN options, ToxData data)
+        public Tox(ToxOptions options, ToxData data)
         {
             Options = options ?? throw new ArgumentNullException(nameof(options));
 
@@ -143,7 +143,7 @@ namespace SharpTox.Core
         /// <param name="options">The options to initialize this instance of Tox with.</param>
         /// <param name="data">A byte array containing Tox save data.</param>
         /// <param name="key">The key to decrypt the given encrypted Tox profile data.</param>
-        public Tox(ToxOptionsN options, ToxData data, ToxEncryptionKey key)
+        public Tox(ToxOptions options, ToxData data, ToxEncryptionKey key)
         {
             this.Options = options ?? throw new ArgumentNullException(nameof(options));
             if (data == null)
@@ -173,7 +173,7 @@ namespace SharpTox.Core
         /// <param name="options">The options to initialize this instance of Tox with.</param>
         /// <param name="data">A byte array containing Tox save data.</param>
         /// <param name="password">The password to decrypt the given encrypted Tox profile data.</param>
-        public Tox(ToxOptionsN options, ToxData data, string password)
+        public Tox(ToxOptions options, ToxData data, string password)
         {
             this.Options = options ?? throw new ArgumentNullException(nameof(options));
 
@@ -307,29 +307,17 @@ namespace SharpTox.Core
         /// <param name="message">The message that will be sent along with the friend request.</param>
         /// <param name="error"></param>
         /// <returns>The friend number.</returns>
-        public int AddFriend(ToxId id, string message, out ToxErrorFriendAdd error)
+        public uint AddFriend(ToxId id, string message, out ToxErrorFriendAdd error)
         {
-            ThrowIfDisposed();
-
             if (id == null)
-                throw new ArgumentNullException("id");
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
 
+            ThrowIfDisposed();
             byte[] msg = ToxEncoding.GetBytes(message);
             error = ToxErrorFriendAdd.Ok;
-
-            return ToxTools.Map(ToxFunctions.Friend.Add(tox, id.Bytes, msg, (uint)msg.Length, ref error));
-        }
-
-        /// <summary>
-        /// Adds a friend to the friend list and sends a friend request.
-        /// </summary>
-        /// <param name="id">The Tox id of the friend to add.</param>
-        /// <param name="message">The message that will be sent along with the friend request.</param>
-        /// <returns>The friend number.</returns>
-        public int AddFriend(ToxId id, string message)
-        {
-            var error = ToxErrorFriendAdd.Ok;
-            return AddFriend(id, message, out error);
+            return ToxFunctions.Friend.Add(tox, id.Bytes, msg, (uint)msg.Length, ref error);
         }
 
         /// <summary>
@@ -339,27 +327,16 @@ namespace SharpTox.Core
         /// <param name="publicKey">The public key of the friend to add.</param>
         /// <param name="error"></param>
         /// <returns>The friend number.</returns>
-        public int AddFriendNoRequest(ToxKey publicKey, out ToxErrorFriendAdd error)
+        public uint AddFriendNoRequest(ToxKey publicKey, out ToxErrorFriendAdd error)
         {
-            ThrowIfDisposed();
-
             if (publicKey == null)
-                throw new ArgumentNullException("publicKey");
+            {
+                throw new ArgumentNullException(nameof(publicKey));
+            }
 
+            ThrowIfDisposed();
             error = ToxErrorFriendAdd.Ok;
-            return ToxTools.Map(ToxFunctions.Friend.AddNoRequest(tox, publicKey.GetBytes(), ref error));
-        }
-
-        /// <summary>
-        /// Adds a friend to the friend list without sending a friend request.
-        /// This method should be used to accept friend requests.
-        /// </summary>
-        /// <param name="publicKey">The public key of the friend to add.</param>
-        /// <returns>The friend number.</returns>
-        public int AddFriendNoRequest(ToxKey publicKey)
-        {
-            var error = ToxErrorFriendAdd.Ok;
-            return AddFriendNoRequest(publicKey, out error);
+            return ToxFunctions.Friend.AddNoRequest(tox, publicKey.GetBytes(), ref error);
         }
 
         /// <summary>
@@ -698,7 +675,7 @@ namespace SharpTox.Core
         /// </summary>
         /// <param name="error"></param>
         /// <returns>The UDP port on success.</returns>
-        public int GetUdpPort(out ToxErrorGetPort error)
+        public ushort GetUdpPort(out ToxErrorGetPort error)
         {
             ThrowIfDisposed();
 
@@ -769,26 +746,12 @@ namespace SharpTox.Core
         /// <param name="control">The control to send.</param>
         /// <param name="error"></param>
         /// <returns>True on success.</returns>
-        public bool FileControl(uint friendNumber, int fileNumber, ToxFileControl control, out ToxErrorFileControl error)
+        public bool FileControl(uint friendNumber, uint fileNumber, ToxFileControl control, out ToxErrorFileControl error)
         {
             ThrowIfDisposed();
 
             error = ToxErrorFileControl.Ok;
-
-            return ToxFunctions.File.Control(tox, friendNumber, ToxTools.Map(fileNumber), control, ref error);
-        }
-
-        /// <summary>
-        /// Sends a file control command to a friend for a given file transfer.
-        /// </summary>
-        /// <param name="friendNumber">The friend to send the file control to.</param>
-        /// <param name="fileNumber">The file transfer that this control is meant for.</param>
-        /// <param name="control">The control to send.</param>
-        /// <returns>True on success.</returns>
-        public bool FileControl(uint friendNumber, int fileNumber, ToxFileControl control)
-        {
-            var error = ToxErrorFileControl.Ok;
-            return FileControl(friendNumber, fileNumber, control, out error);
+            return ToxFunctions.File.Control(tox, friendNumber, fileNumber, control, ref error);
         }
 
         /// <summary>
@@ -908,7 +871,7 @@ namespace SharpTox.Core
         /// <param name="data">The data to send. (should be equal to 'Length' received through OnFileChunkRequested).</param>
         /// <param name="error"></param>
         /// <returns>True on success.</returns>
-        public bool FileSendChunk(uint friendNumber, int fileNumber, long position, byte[] data, out ToxErrorFileSendChunk error)
+        public bool FileSendChunk(uint friendNumber, uint fileNumber, long position, byte[] data, out ToxErrorFileSendChunk error)
         {
             if (data == null)
             {
@@ -917,21 +880,7 @@ namespace SharpTox.Core
 
             ThrowIfDisposed();
             error = ToxErrorFileSendChunk.Ok;
-            return ToxFunctions.File.SendChunk(tox, friendNumber, ToxTools.Map(fileNumber), (ulong)position, data, (uint)data.Length, ref error);
-        }
-
-        /// <summary>
-        /// Sends a chunk of file data to a friend. This should be called in response to OnFileChunkRequested.
-        /// </summary>
-        /// <param name="friendNumber">The friend to send the chunk to.</param>
-        /// <param name="fileNumber">The file transfer that this chunk belongs to.</param>
-        /// <param name="position">The position from which to continue reading.</param>
-        /// <param name="data">The data to send. (should be equal to 'Length' received through OnFileChunkRequested).</param>
-        /// <returns>True on success.</returns>
-        public bool FileSendChunk(uint friendNumber, int fileNumber, long position, byte[] data)
-        {
-            var error = ToxErrorFileSendChunk.Ok;
-            return FileSendChunk(friendNumber, fileNumber, position, data, out error);
+            return ToxFunctions.File.SendChunk(tox, friendNumber, fileNumber, (ulong)position, data, (uint)data.Length, ref error);
         }
 
         /// <summary>

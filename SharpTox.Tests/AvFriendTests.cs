@@ -1,34 +1,51 @@
-using System;
-using SharpTox.Core;
-using SharpTox.Av;
-using System.Threading;
 using NUnit.Framework;
+using SharpTox.Av;
+using SharpTox.Core;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpTox.Test
 {
     [TestFixture]
     public class AvFriendTests
     {
-        private Tox _tox1;
-        private Tox _tox2;
+        private Tox tox1;
+        private Tox tox2;
         private ToxAv _toxAv1;
         private ToxAv _toxAv2;
 
         [OneTimeSetUp]
-        [MaxTime(10000)]
-        public void Init()
+        public async Task Init()
         {
-            var options = new ToxOptions(true, true);
-            _tox1 = new Tox(options);
-            _tox2 = new Tox(options);
+            var options = new ToxOptions { Ipv6Enabled = true, UdpEnabled = true };// new ToxOptions_DEPRECATED(true, true);
+            tox1 = new Tox(options);
+            tox2 = new Tox(options);
 
-            _toxAv1 = new ToxAv(_tox1);
-            _toxAv2 = new ToxAv(_tox2);
+            _toxAv1 = new ToxAv(tox1);
+            _toxAv2 = new ToxAv(tox2);
 
-            _tox1.AddFriend(_tox2.Id, "hey");
-            _tox2.AddFriend(_tox1.Id, "hey");
+            var friend2 = tox1.AddFriend(tox2.Id, "hey", out _);
+            tox2.AddFriend(tox1.Id, "hey", out _);
 
-            while (_tox1.GetFriendConnectionStatus(0) == ToxConnectionStatus.None) { DoIterate(); }
+            var connected = new TaskCompletionSource<bool>();
+
+            tox1.OnFriendConnectionStatusChanged += (o, e) =>
+            {
+                if (e.FriendNumber == friend2)
+                {
+                    connected.SetResult(e.Status != ToxConnectionStatus.None);
+                }
+            };
+
+            await Task.WhenAny(Task.Delay(10000), connected.Task);
+
+            if (!connected.Task.IsCompleted)
+            {
+                Assert.Fail();
+            }
+
+            Assert.True(await connected.Task);
 
             bool answered = false;
             _toxAv1.Call(0, 48, 3000);
@@ -53,13 +70,13 @@ namespace SharpTox.Test
             _toxAv1.Dispose();
             _toxAv2.Dispose();
 
-            _tox1.Dispose();
-            _tox2.Dispose();
+            tox1.Dispose();
+            tox2.Dispose();
         }
 
         private void DoIterate()
         {
-            int time1 = Math.Min(_tox1.Iterate(), _tox2.Iterate());
+            int time1 = Math.Min(tox1.Iterate(), tox2.Iterate());
             int time2 = Math.Min(_toxAv1.Iterate(), _toxAv2.Iterate());
 
             Thread.Sleep(Math.Min(time1, time2));

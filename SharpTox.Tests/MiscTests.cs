@@ -1,54 +1,66 @@
-﻿using System;
-using System.Threading;
+﻿using NUnit.Framework;
 using SharpTox.Core;
+using System;
 using System.Runtime.InteropServices;
-using NUnit.Framework;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpTox.Test
 {
     [TestFixture]
     public class MiscTests
     {
-        private ToxOptions _options = new ToxOptions(true, true);
-
-        [Test, MaxTime(30000)]
-        public void TestToxBootstrapAndConnect()
+        [Test]
+        public async Task TestToxBootstrapAndConnect()
         {
-            var tox = new Tox(_options);
-            var error = ToxErrorBootstrap.Ok;
-
-            foreach (var node in Globals.Nodes)
+            using (var tox = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = true }))
             {
-                bool result = tox.Bootstrap(node, out error);
-                if (!result || error != ToxErrorBootstrap.Ok)
-                    Assert.Fail("Failed to bootstrap, error: {0}, result: {1}", error, result);
+                var error = ToxErrorBootstrap.Ok;
+
+                foreach (var node in Globals.Nodes)
+                {
+                    bool result = tox.Bootstrap(node, out error);
+                    if (!result || error != ToxErrorBootstrap.Ok)
+                        Assert.Fail("Failed to bootstrap, error: {0}, result: {1}", error, result);
+                }
+
+                var connected = new TaskCompletionSource<bool>();
+                tox.OnConnectionStatusChanged += (o, e) =>
+                {
+                    connected.SetResult(e.Status != ToxConnectionStatus.None);
+                };
+
+                tox.Start();
+                await Task.WhenAny(Task.Delay(30000), connected.Task);
+                Assert.True(connected.Task.IsCompleted, "Timeout");
+                Assert.True(await connected.Task);
             }
-
-            tox.Start();
-            while (!tox.IsConnected) { Thread.Sleep(10); }
-
-            Console.WriteLine("Tox connected!");
-            tox.Dispose();
         }
 
-        [Test, MaxTime(12000)]
-        public void TestToxBootstrapAndConnectTcp()
+        [Test]
+        public async Task TestToxBootstrapAndConnectTcp()
         {
-            var tox = new Tox(new ToxOptions(true, false));
-            var error = ToxErrorBootstrap.Ok;
-
-            foreach (var node in Globals.TcpRelays)
+            using (var tox = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = false }))
             {
-                bool result = tox.AddTcpRelay(node, out error);
-                if (!result || error != ToxErrorBootstrap.Ok)
-                    Assert.Fail("Failed to bootstrap error: {0}, result: {1}", error, result);
+                var error = ToxErrorBootstrap.Ok;
+                foreach (var node in Globals.TcpRelays)
+                {
+                    bool result = tox.AddTcpRelay(node, out error);
+                    if (!result || error != ToxErrorBootstrap.Ok)
+                        Assert.Fail("Failed to bootstrap error: {0}, result: {1}", error, result);
+                }
+
+                var connected = new TaskCompletionSource<bool>();
+                tox.OnConnectionStatusChanged += (o, e) =>
+                {
+                    connected.SetResult(e.Status != ToxConnectionStatus.None);
+                };
+
+                tox.Start();
+                await Task.WhenAny(Task.Delay(12000), connected.Task);
+                Assert.True(connected.Task.IsCompleted, "Timeout");
+                Assert.True(await connected.Task);
             }
-
-            tox.Start();
-            while (!tox.IsConnected) { Thread.Sleep(10); }
-
-            Console.WriteLine("Tox connected!");
-            tox.Dispose();
         }
 
         [Test]
@@ -59,22 +71,5 @@ namespace SharpTox.Test
 
             byte[] hash = ToxTools.Hash(data);
         }
-
-        /*[TestMethod]
-        public void TestToxOptions()
-        {
-            var error = ToxErrorOptionsNew.Ok;
-            var ptr = ToxFunctions.OptionsNew(ref error);
-
-            if (error != ToxErrorOptionsNew.Ok)
-                Assert.Fail("Failed to allocate a new instance of Tox_Options, error: {0}", error);
-
-            var options = (ToxOptions)Marshal.PtrToStructure(ptr, typeof(ToxOptions));
-            if (options != ToxOptions.Default)
-                Assert.Fail("Failed, result of OptionsNew does not have the same values as the default tox options");
-
-            Marshal.StructureToPtr(options, ptr, true);
-            ToxFunctions.OptionsFree(ptr);
-        }*/
     }
 }
