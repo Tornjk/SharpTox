@@ -147,15 +147,15 @@ namespace SharpTox.Core
 
         public class FileRequestChunkEventArgs : FileBaseEventArgs
         {
-            public long Position { get; set; }
+            public ulong Position { get; set; }
 
-            public int Length { get; set; }
+            public uint Length { get; set; }
 
-            public FileRequestChunkEventArgs(uint friendNumber, uint fileNumber, long position, int length)
+            public FileRequestChunkEventArgs(uint friendNumber, uint fileNumber, ulong position, uint length)
                 : base(friendNumber, fileNumber)
             {
-                Position = position;
-                Length = length;
+                this.Position = position;
+                this.Length = length;
             }
         }
 
@@ -174,30 +174,30 @@ namespace SharpTox.Core
         {
             public byte[] Data { get; private set; }
 
-            public long Position { get; private set; }
+            public ulong Position { get; private set; }
 
-            public FileChunkEventArgs(uint friendNumber, uint fileNumber, byte[] data, long position)
+            public FileChunkEventArgs(uint friendNumber, uint fileNumber, byte[] data, ulong position)
                 : base(friendNumber, fileNumber)
             {
-                Data = data;
-                Position = position;
+                this.Data = data;
+                this.Position = position;
             }
         }
 
         public class FileSendRequestEventArgs : FileBaseEventArgs
         {
-            public long FileSize { get; private set; }
+            public ulong FileSize { get; }
 
-            public string FileName { get; private set; }
+            public string FileName { get; }
 
-            public ToxFileKind FileKind { get; private set; }
+            public ToxFileKind FileKind { get; }
 
-            public FileSendRequestEventArgs(uint friendNumber, uint fileNumber, ToxFileKind kind, long fileSize, string fileName)
+            public FileSendRequestEventArgs(uint friendNumber, uint fileNumber, ToxFileKind kind, ulong fileSize, string fileName)
                 : base(friendNumber, fileNumber)
             {
-                FileSize = fileSize;
-                FileName = fileName;
-                FileKind = kind;
+                this.FileSize = fileSize;
+                this.FileName = fileName;
+                this.FileKind = kind;
             }
         }
 

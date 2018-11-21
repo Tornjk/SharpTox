@@ -278,11 +278,8 @@ namespace SharpTox.Test
 
             tox2.OnFileSendRequestReceived += (sender, args) =>
             {
-                if (fileName != args.FileName)
-                    Assert.Fail("Filenames do not match");
-
-                if (args.FileSize != fileData.Length)
-                    Assert.Fail("File lengths do not match");
+                Assert.AreEqual(fileName, args.FileName, "Filenames do not match");
+                Assert.AreEqual(fileData.Length, args.FileSize, "File lengths do not match");
 
                 var error2 = ToxErrorFileControl.Ok;
                 bool result = tox2.FileControl(args.FriendNumber, args.FileNumber, ToxFileControl.Resume, out error2);
@@ -292,13 +289,12 @@ namespace SharpTox.Test
 
             var error = ToxErrorFileSend.Ok;
             var fileInfo = tox1.FileSend(0, ToxFileKind.Data, fileData.Length, fileName, out error);
-            if (error != ToxErrorFileSend.Ok)
-                Assert.Fail("Failed to send a file send request, error: {0}", error);
+            Assert.AreEqual(ToxErrorFileSend.Ok, error, "Failed to send a file send request, error: {0}", error);
 
             tox1.OnFileChunkRequested += (sender, args) =>
             {
                 byte[] data = new byte[args.Length];
-                Array.Copy(fileData, args.Position, data, 0, args.Length);
+                Array.Copy(fileData, unchecked((long)args.Position), data, 0, args.Length);
 
                 var error2 = ToxErrorFileSendChunk.Ok;
                 bool result = tox1.FileSendChunk(args.FriendNumber, args.FileNumber, args.Position, data, out error2);
@@ -308,16 +304,19 @@ namespace SharpTox.Test
 
             tox2.OnFileChunkReceived += (sender, args) =>
             {
-                if (args.Position == fileData.Length)
+                if (unchecked((int)args.Position) == fileData.Length)
+                {
                     fileReceived = true;
+                }
                 else
-                    Array.Copy(args.Data, 0, receivedData, args.Position, args.Data.Length);
+                {
+                    Array.Copy(args.Data, 0, receivedData, unchecked((long)args.Position), args.Data.Length);
+                }
             };
 
             while (!fileReceived) { DoIterate(); }
 
-            if (!fileData.SequenceEqual(receivedData))
-                Assert.Fail("Original data is not equal to the data we received");
+            Assert.AreEqual(fileData, receivedData, "Original data is not equal to the data we received");
         }
     }
 }

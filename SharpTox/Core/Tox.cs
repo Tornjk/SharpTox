@@ -871,7 +871,7 @@ namespace SharpTox.Core
         /// <param name="data">The data to send. (should be equal to 'Length' received through OnFileChunkRequested).</param>
         /// <param name="error"></param>
         /// <returns>True on success.</returns>
-        public bool FileSendChunk(uint friendNumber, uint fileNumber, long position, byte[] data, out ToxErrorFileSendChunk error)
+        public bool FileSendChunk(uint friendNumber, uint fileNumber, ulong position, byte[] data, out ToxErrorFileSendChunk error)
         {
             if (data == null)
             {
@@ -880,7 +880,7 @@ namespace SharpTox.Core
 
             ThrowIfDisposed();
             error = ToxErrorFileSendChunk.Ok;
-            return ToxFunctions.File.SendChunk(tox, friendNumber, fileNumber, (ulong)position, data, (uint)data.Length, ref error);
+            return ToxFunctions.File.SendChunk(tox, friendNumber, fileNumber, position, data, (uint)data.Length, ref error);
         }
 
         /// <summary>
@@ -897,10 +897,12 @@ namespace SharpTox.Core
             error = ToxErrorFileGet.Ok;
             byte[] id = new byte[ToxConstants.FileIdLength];
 
-            if (!ToxFunctions.File.GetFileId(tox, friendNumber, ToxTools.Map(fileNumber), id, ref error))
-                return null;
+            if (ToxFunctions.File.GetFileId(tox, friendNumber, ToxTools.Map(fileNumber), id, ref error))
+            {
+                return id;
+            }
 
-            return id;
+            return null;
         }
 
         /// <summary>
@@ -1013,7 +1015,7 @@ namespace SharpTox.Core
 
             error = ToxErrorConferencePeerQuery.Ok;
             var size = ToxFunctions.Conference.Peer.GetNameSize(this.tox, conferenceNumber, peerNumber, ref error);
-            if(error != ToxErrorConferencePeerQuery.Ok)
+            if (error != ToxErrorConferencePeerQuery.Ok)
             {
                 return null;
             }
@@ -1347,7 +1349,7 @@ namespace SharpTox.Core
         private readonly ToxCallbackHandler<ToxEventArgs.FileChunkEventArgs, ToxDelegates.CallbackFileReceiveChunkDelegate> fileChunkReceived
           = new ToxCallbackHandler<ToxEventArgs.FileChunkEventArgs, ToxDelegates.CallbackFileReceiveChunkDelegate>(ToxCallbacks.File.ReceiveChunk, cb =>
                     (tox, friendNumber, fileNumber, position, data, length, userData) =>
-                            cb(new ToxEventArgs.FileChunkEventArgs(friendNumber, fileNumber, data, (long)position)));
+                            cb(new ToxEventArgs.FileChunkEventArgs(friendNumber, fileNumber, data, position)));
 
         /// <summary>
         /// Occurs when a chunk of data from a file transfer is received
@@ -1363,7 +1365,7 @@ namespace SharpTox.Core
                         cb(new ToxEventArgs.FileSendRequestEventArgs(friendNumber,
                                                                      fileNumber,
                                                                      kind,
-                                                                     (long)fileSize,
+                                                                     fileSize,
                                                                      filename == null ? string.Empty : ToxEncoding.GetString(filename, 0, filename.Length))));
 
         /// <summary>
@@ -1377,7 +1379,7 @@ namespace SharpTox.Core
         private readonly ToxCallbackHandler<ToxEventArgs.FileRequestChunkEventArgs, ToxDelegates.CallbackFileRequestChunkDelegate> fileChunkRequested
           = new ToxCallbackHandler<ToxEventArgs.FileRequestChunkEventArgs, ToxDelegates.CallbackFileRequestChunkDelegate>(ToxCallbacks.File.ChunkRequest, cb =>
                 (tox, friendNumber, fileNumber, position, length, userData) =>
-                            cb(new ToxEventArgs.FileRequestChunkEventArgs(friendNumber, fileNumber, (long)position, (int)length)));
+                            cb(new ToxEventArgs.FileRequestChunkEventArgs(friendNumber, fileNumber, position, length)));
 
         /// <summary>
         /// Occurs when the core requests the next chunk of the file.
