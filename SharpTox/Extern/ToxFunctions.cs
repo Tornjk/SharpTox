@@ -348,6 +348,9 @@ namespace SharpTox.Core
                 [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = Prefix + "get_name_size")]
                 public static extern SizeT GetNameSize(ToxHandle tox, UInt32 conferenceNumber, UInt32 peerNumber, ref ToxErrorConferencePeerQuery error);
 
+                [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = Prefix + "get_name")]
+                public static extern Boolean GetName(ToxHandle tox, UInt32 conferenceNumber, UInt32 peerNumber, Byte[] name, ref ToxErrorConferencePeerQuery error);
+
                 [DllImport(Extern.DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = Prefix + "get_public_key")]
                 [return: MarshalAs(UnmanagedType.I1)]
                 public static extern Boolean GetPublicKey(ToxHandle tox, UInt32 conferenceNumber, UInt32 peerNumber, Byte[] publicKey, ref ToxErrorConferencePeerQuery error);

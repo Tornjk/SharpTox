@@ -129,7 +129,7 @@ namespace SharpTox.Core
         /// <summary>
         /// Default Tox Options.
         /// </summary>
-        public static ToxOptions Default { get { return new ToxOptions(ToxOptionsStruct.Default); } }
+        public static ToxOptions Default => null;
 
         /// <summary>
         /// Whether or not IPv6 should be enabled.
@@ -273,14 +273,6 @@ namespace SharpTox.Core
 order) is not part of the ABI. To remain compatible, prefer to use tox_options_new to
 allocate the object and accessor functions to set the members. The struct
 will become opaque (i.e. the definition will become private) in v0.3.0.";
-
-        public static ToxOptionsStruct Default {
-            get {
-                ToxOptionsStruct options = new ToxOptionsStruct();
-                ToxFunctions.OptionsDefault(ref options);
-                return options;
-            }
-        }
 
         public void SetData(byte[] data, ToxSavedataType type)
         {

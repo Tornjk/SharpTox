@@ -11,34 +11,13 @@ namespace SharpTox.Core
     /// </summary>
     public sealed class Tox : IDisposable
     {
+        private static Encoding ToxEncoding = Encoding.UTF8;
+
         private ToxHandle tox;
         private CancellationTokenSource _cancelTokenSource;
 
         private bool _running = false;
         private bool _disposed = false;
-
-        #region Callback delegates
-        private readonly ToxDelegates.CallbackFriendRequestDelegate _onFriendRequestCallback;
-        private readonly ToxDelegates.CallbackFriendMessageDelegate _onFriendMessageCallback;
-        private readonly ToxDelegates.CallbackNameChangeDelegate _onNameChangeCallback;
-        private readonly ToxDelegates.CallbackStatusMessageDelegate _onStatusMessageCallback;
-        private readonly ToxDelegates.CallbackUserStatusDelegate _onUserStatusCallback;
-        private readonly ToxDelegates.CallbackTypingChangeDelegate _onTypingChangeCallback;
-        private readonly ToxDelegates.CallbackConnectionStatusDelegate _onConnectionStatusCallback;
-        private readonly ToxDelegates.CallbackFriendConnectionStatusDelegate _onFriendConnectionStatusCallback;
-        private readonly ToxDelegates.CallbackReadReceiptDelegate _onReadReceiptCallback;
-        private readonly ToxDelegates.CallbackFileControlDelegate _onFileControlCallback;
-        private readonly ToxDelegates.CallbackFileReceiveChunkDelegate _onFileReceiveChunkCallback;
-        private readonly ToxDelegates.CallbackFileReceiveDelegate _onFileReceiveCallback;
-        private readonly ToxDelegates.CallbackFileRequestChunkDelegate _onFileRequestChunkCallback;
-        private readonly ToxDelegates.CallbackFriendPacketDelegate _onFriendLossyPacketCallback;
-        private readonly ToxDelegates.CallbackFriendPacketDelegate _onFriendLosslessPacketCallback;
-        private readonly ToxDelegates.CallbackConferenceInviteDelegate _onConferenceInviteCallback;
-        private readonly ToxDelegates.CallbackConferenceActionDelegate _onConferenceActionCallback;
-        private readonly ToxDelegates.CallbackConferenceMessageDelegate _onConferenceMessageCallback;
-        private readonly ToxDelegates.CallbackConferenceNamelistChangeDelegate _onConferenceNamelistChangeCallback;
-        private readonly ToxDelegates.CallbackConferenceTitleDelegate _onConferenceTitleCallback;
-        #endregion
 
         /// <summary>
         /// Options that are used for this instance of Tox.
@@ -61,7 +40,7 @@ namespace SharpTox.Core
 
             set {
                 ThrowIfDisposed();
-                byte[] bytes = Encoding.UTF8.GetBytes(value);
+                byte[] bytes = ToxEncoding.GetBytes(value);
                 var error = ToxErrorSetInfo.Ok;
                 ToxFunctions.Self.SetName(this.tox, bytes, (uint)bytes.Length, ref error);
             }
@@ -78,7 +57,7 @@ namespace SharpTox.Core
             set {
                 ThrowIfDisposed();
 
-                byte[] msg = Encoding.UTF8.GetBytes(value);
+                byte[] msg = ToxEncoding.GetBytes(value);
                 var error = ToxErrorSetInfo.Ok;
                 ToxFunctions.Self.SetStatusMessage(tox, msg, (uint)msg.Length, ref error);
             }
@@ -335,7 +314,7 @@ namespace SharpTox.Core
             if (id == null)
                 throw new ArgumentNullException("id");
 
-            byte[] msg = Encoding.UTF8.GetBytes(message);
+            byte[] msg = ToxEncoding.GetBytes(message);
             error = ToxErrorFriendAdd.Ok;
 
             return ToxTools.Map(ToxFunctions.Friend.Add(tox, id.Bytes, msg, (uint)msg.Length, ref error));
@@ -549,7 +528,7 @@ namespace SharpTox.Core
         {
             ThrowIfDisposed();
 
-            byte[] bytes = Encoding.UTF8.GetBytes(message);
+            byte[] bytes = ToxEncoding.GetBytes(message);
             error = ToxErrorSendMessage.Ok;
 
             return ToxFunctions.Friend.SendMessage(tox, friendNumber, type, bytes, (uint)bytes.Length, ref error);
@@ -666,7 +645,7 @@ namespace SharpTox.Core
             if (!ToxFunctions.Friend.GetName(tox, friendNumber, name, ref error))
                 return string.Empty;
 
-            return Encoding.UTF8.GetString(name, 0, name.Length);
+            return ToxEncoding.GetString(name, 0, name.Length);
         }
 
         /// <summary>
@@ -700,7 +679,7 @@ namespace SharpTox.Core
             if (!ToxFunctions.Friend.GetStatusMessage(tox, friendNumber, message, ref error))
                 return string.Empty;
 
-            return Encoding.UTF8.GetString(message, 0, message.Length);
+            return ToxEncoding.GetString(message, 0, message.Length);
         }
 
         /// <summary>
@@ -826,7 +805,7 @@ namespace SharpTox.Core
             ThrowIfDisposed();
 
             error = ToxErrorFileSend.Ok;
-            byte[] fileNameBytes = Encoding.UTF8.GetBytes(fileName);
+            byte[] fileNameBytes = ToxEncoding.GetBytes(fileName);
             int fileNumber = ToxTools.Map(ToxFunctions.File.Send(tox, friendNumber, kind, (ulong)fileSize, null, fileNameBytes, (uint)fileNameBytes.Length, ref error));
 
             if (error == ToxErrorFileSend.Ok)
@@ -867,7 +846,7 @@ namespace SharpTox.Core
                 throw new ArgumentException("fileId should be exactly ToxConstants.FileIdLength bytes long", "fileId");
 
             error = ToxErrorFileSend.Ok;
-            byte[] fileNameBytes = Encoding.UTF8.GetBytes(fileName);
+            byte[] fileNameBytes = ToxEncoding.GetBytes(fileName);
             int fileNumber = ToxTools.Map(ToxFunctions.File.Send(tox, friendNumber, kind, (ulong)fileSize, fileId, fileNameBytes, (uint)fileNameBytes.Length, ref error));
 
             if (error == ToxErrorFileSend.Ok)
@@ -931,13 +910,13 @@ namespace SharpTox.Core
         /// <returns>True on success.</returns>
         public bool FileSendChunk(uint friendNumber, int fileNumber, long position, byte[] data, out ToxErrorFileSendChunk error)
         {
-            ThrowIfDisposed();
-
             if (data == null)
-                throw new ArgumentNullException("data");
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
 
+            ThrowIfDisposed();
             error = ToxErrorFileSendChunk.Ok;
-
             return ToxFunctions.File.SendChunk(tox, friendNumber, ToxTools.Map(fileNumber), (ulong)position, data, (uint)data.Length, ref error);
         }
 
@@ -997,11 +976,12 @@ namespace SharpTox.Core
         /// <returns>True on success.</returns>
         public bool FriendSendLossyPacket(uint friendNumber, byte[] data, out ToxErrorFriendCustomPacket error)
         {
-            ThrowIfDisposed();
-
             if (data == null)
-                throw new ArgumentNullException("data");
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
 
+            ThrowIfDisposed();
             error = ToxErrorFriendCustomPacket.Ok;
 
             return ToxFunctions.Friend.SendLossyPacket(tox, friendNumber, data, (uint)data.Length, ref error);
@@ -1030,13 +1010,13 @@ namespace SharpTox.Core
         /// <returns>True on success.</returns>
         public bool FriendSendLosslessPacket(uint friendNumber, byte[] data, out ToxErrorFriendCustomPacket error)
         {
-            ThrowIfDisposed();
-
             if (data == null)
-                throw new ArgumentNullException("data");
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
 
+            ThrowIfDisposed();
             error = ToxErrorFriendCustomPacket.Ok;
-
             return ToxFunctions.Friend.SendLosslessPacket(tox, friendNumber, data, (uint)data.Length, ref error);
         }
 
@@ -1054,224 +1034,213 @@ namespace SharpTox.Core
         }
 
         /// <summary>
-        /// Retrieves an array of Conference member names.
-        /// </summary>
-        /// <param name="ConferenceNumber">The Conference to retrieve member names of.</param>
-        /// <returns>A string array of Conference member names on success.</returns>
-        public string[] GetConferenceNames(int ConferenceNumber)
-        {
-            ThrowIfDisposed();
-
-            int count = ToxFunctions.ConferenceNumberPeers(tox, ConferenceNumber);
-            if (count <= 0)
-                return new string[0];
-
-            ushort[] lengths = new ushort[count];
-            byte[,] matrix = new byte[count, ToxConstants.MaxNameLength];
-
-            int result = ToxFunctions.ConferenceGetNames(tox, ConferenceNumber, matrix, lengths, (ushort)count);
-
-            string[] names = new string[count];
-            for (int i = 0; i < count; i++)
-            {
-                byte[] name = new byte[lengths[i]];
-
-                for (int j = 0; j < name.Length; j++)
-                    name[j] = matrix[i, j];
-
-                names[i] = Encoding.UTF8.GetString(name, 0, name.Length);
-            }
-
-            return names;
-        }
-
-        /// <summary>
         /// Joins a Conference with the given public key of the Conference.
         /// </summary>
         /// <param name="friendNumber">The friend number we received an invite from.</param>
-        /// <param name="data">Data obtained from the OnConferenceInvite event.</param>
+        /// <param name="cookie">Data obtained from the OnConferenceInvite event.</param>
         /// <returns>The Conference number on success.</returns>
-        public int JoinConference(uint friendNumber, byte[] data)
+        public uint JoinConference(uint friendNumber, byte[] cookie, out ToxErrorConferenceJoin error)
         {
+            if (cookie == null)
+            {
+                throw new ArgumentNullException(nameof(cookie));
+            }
+
             ThrowIfDisposed();
 
-            if (data == null)
-                throw new ArgumentNullException("data");
-
-            return ToxFunctions.JoinConferencechat(tox, friendNumber, data, (ushort)data.Length);
+            error = ToxErrorConferenceJoin.Ok;
+            return ToxFunctions.Conference.Join(this.tox, friendNumber, cookie, (uint)cookie.Length, ref error);
         }
 
         /// <summary>
         /// Retrieves the name of a Conference member.
         /// </summary>
-        /// <param name="ConferenceNumber">The Conference that the peer is in.</param>
+        /// <param name="conferenceNumber">The Conference that the peer is in.</param>
         /// <param name="peerNumber">The peer to retrieve the name of.</param>
         /// <returns>The peer's name on success.</returns>
-        public string GetConferenceMemberName(int ConferenceNumber, int peerNumber)
+        public string GetConferencePeerName(uint conferenceNumber, uint peerNumber, out ToxErrorConferencePeerQuery error)
         {
             ThrowIfDisposed();
 
-            byte[] name = new byte[ToxConstants.MaxNameLength];
-            if (ToxFunctions.ConferencePeername(tox, ConferenceNumber, peerNumber, name) == -1)
-                throw new Exception("Could not get peer name");
+            error = ToxErrorConferencePeerQuery.Ok;
+            var size = ToxFunctions.Conference.Peer.GetNameSize(this.tox, conferenceNumber, peerNumber, ref error);
+            if(error != ToxErrorConferencePeerQuery.Ok)
+            {
+                return null;
+            }
 
-            return ToxTools.RemoveNull(Encoding.UTF8.GetString(name, 0, name.Length));
+            byte[] name = new byte[size];
+            if (ToxFunctions.Conference.Peer.GetName(this.tox, conferenceNumber, peerNumber, name, ref error))
+            {
+                return ToxEncoding.GetString(name);
+            }
+
+            return null;
         }
 
         /// <summary>
         /// Retrieves the number of Conference members in a Conference chat.
         /// </summary>
-        /// <param name="ConferenceNumber">The Conference to get the member count of.</param>
+        /// <param name="conferenceNumber">The Conference to get the member count of.</param>
         /// <returns>The member count on success.</returns>
-        public int GetConferenceMemberCount(int ConferenceNumber)
+        public uint GetConferencePeerCount(uint conferenceNumber, out ToxErrorConferencePeerQuery error)
         {
             ThrowIfDisposed();
-
-            return ToxFunctions.ConferenceNumberPeers(tox, ConferenceNumber);
+            error = ToxErrorConferencePeerQuery.Ok;
+            return ToxFunctions.Conference.Peer.Count(this.tox, conferenceNumber, ref error);
         }
 
         /// <summary>
         /// Deletes a Conference chat.
         /// </summary>
-        /// <param name="ConferenceNumber">The Conference to delete.</param>
+        /// <param name="conferenceNumber">The Conference to delete.</param>
         /// <returns>True on success.</returns>
-        public bool DeleteConferenceChat(int ConferenceNumber)
+        public bool DeleteConferenceChat(uint conferenceNumber, out ToxErrorConferenceDelete error)
         {
             ThrowIfDisposed();
-
-            return ToxFunctions.DelConferencechat(tox, ConferenceNumber) == 0;
+            error = ToxErrorConferenceDelete.Ok;
+            return ToxFunctions.Conference.Delete(tox, conferenceNumber, ref error);
         }
 
         /// <summary>
         /// Invites a friend to a Conference chat.
         /// </summary>
         /// <param name="friendNumber">The friend to invite to a Conference.</param>
-        /// <param name="ConferenceNumber">The Conference to invite the friend to.</param>
+        /// <param name="conferenceNumber">The Conference to invite the friend to.</param>
         /// <returns>True on success.</returns>
-        public bool InviteFriend(uint friendNumber, int ConferenceNumber)
+        public bool InviteFriend(uint friendNumber, uint conferenceNumber, out ToxErrorConferenceInvite error)
         {
             ThrowIfDisposed();
-
-            return ToxFunctions.InviteFriend(tox, friendNumber, ConferenceNumber) == 0;
+            error = ToxErrorConferenceInvite.Ok;
+            return ToxFunctions.Conference.Invite(this.tox, friendNumber, conferenceNumber, ref error);
         }
+
+        public static bool ValidMessage(string message)
+            => ToxEncoding.GetByteCount(message ?? throw new ArgumentNullException(nameof(message))) < ToxFunctions.Max.MessageLength();
 
         /// <summary>
         /// Sends a message to a Conference.
         /// </summary>
-        /// <param name="ConferenceNumber">The Conference to send the message to.</param>
+        /// <param name="conferenceNumber">The Conference to send the message to.</param>
         /// <param name="message">The message to send.</param>
         /// <returns>True on success.</returns>
-        public bool SendConferenceMessage(int ConferenceNumber, string message)
+        public bool SendConferenceMessage(uint conferenceNumber, ToxMessageType type, string message, out ToxErrorConferenceSendMessage error)
         {
             ThrowIfDisposed();
+            if (!ValidMessage(message))
+            {
+                throw new ArgumentException(nameof(message));
+            }
 
-            byte[] msg = Encoding.UTF8.GetBytes(message);
-            return ToxFunctions.ConferenceMessageSend(tox, ConferenceNumber, msg, (ushort)msg.Length) == 0;
-        }
-
-        /// <summary>
-        /// Sends an action to a Conference.
-        /// </summary>
-        /// <param name="ConferenceNumber">The Conference to send the action to.</param>
-        /// <param name="action">The action to send.</param>
-        /// <returns>True on success.</returns>
-        public bool SendConferenceAction(int ConferenceNumber, string action)
-        {
-            ThrowIfDisposed();
-
-            byte[] act = Encoding.UTF8.GetBytes(action);
-            return ToxFunctions.ConferenceActionSend(tox, ConferenceNumber, act, (ushort)act.Length) == 0;
+            error = ToxErrorConferenceSendMessage.Ok;
+            byte[] msg = ToxEncoding.GetBytes(message);
+            return ToxFunctions.Conference.SendMessage(this.tox, conferenceNumber, type, msg, (uint)msg.Length, ref error);
         }
 
         /// <summary>
         /// Creates a new Conference and retrieves the Conference number.
         /// </summary>
         /// <returns>The number of the created Conference on success.</returns>
-        public int NewConference()
+        public uint NewConference(out ToxErrorConferenceNew error)
         {
             ThrowIfDisposed();
-
-            return ToxFunctions.AddConferencechat(tox);
+            error = ToxErrorConferenceNew.Ok;
+            return ToxFunctions.Conference.New(this.tox, ref error);
         }
 
         /// <summary>
         /// Check if the given peernumber corresponds to ours.
         /// </summary>
-        /// <param name="ConferenceNumber">The Conference to check in.</param>
+        /// <param name="conferenceNumber">The Conference to check in.</param>
         /// <param name="peerNumber">The peer number to check.</param>
         /// <returns>True if the given peer number is ours.</returns>
-        public bool PeerNumberIsOurs(int ConferenceNumber, int peerNumber)
+        public bool PeerNumberIsOurs(uint conferenceNumber, uint peerNumber, out ToxErrorConferencePeerQuery error)
         {
             ThrowIfDisposed();
 
-            return ToxFunctions.ConferencePeerNumberIsOurs(tox, ConferenceNumber, peerNumber) == 1;
+            error = ToxErrorConferencePeerQuery.Ok;
+            return ToxFunctions.Conference.Peer.NumberIsOurs(tox, conferenceNumber, peerNumber, ref error);
         }
+
+        public static bool ValidConferenceTitle(string title)
+            => ToxEncoding.GetByteCount(title) < ToxFunctions.Max.NameLength();
 
         /// <summary>
         /// Changes the title of a Conference.
         /// </summary>
-        /// <param name="ConferenceNumber">The Conference to change the title of.</param>
+        /// <param name="conferenceNumber">The Conference to change the title of.</param>
         /// <param name="title">The title to set.</param>
         /// <returns>True on success.</returns>
-        public bool SetConferenceTitle(int ConferenceNumber, string title)
+        public bool SetConferenceTitle(uint conferenceNumber, string title, out ToxErrorConferenceTitle error)
         {
             ThrowIfDisposed();
 
-            if (Encoding.UTF8.GetByteCount(title) > ToxConstants.MaxNameLength)
-                throw new ArgumentException("The specified Conference title is longer than 256 bytes");
+            if (!ValidConferenceTitle(title))
+            {
+                throw new ArgumentException($"The specified Conference title is too long. (Check before with {nameof(ValidConferenceTitle)})");
+            }
 
-            byte[] bytes = Encoding.UTF8.GetBytes(title);
-
-            return ToxFunctions.ConferenceSetTitle(tox, ConferenceNumber, bytes, (byte)bytes.Length) == 0;
+            error = ToxErrorConferenceTitle.Ok;
+            byte[] bytes = ToxEncoding.GetBytes(title);
+            return ToxFunctions.Conference.SetTitle(tox, conferenceNumber, bytes, (byte)bytes.Length, ref error);
         }
 
         /// <summary>
         /// Retrieves the type of a Conference.
         /// </summary>
-        /// <param name="ConferenceNumber">The Conference to retrieve the type of.</param>
+        /// <param name="conferenceNumber">The Conference to retrieve the type of.</param>
         /// <returns>The Conference type on success.</returns>
-        public ToxConferenceType GetConferenceType(int ConferenceNumber)
+        public ToxConferenceType GetConferenceType(uint conferenceNumber, out ToxErrorConferenceGetType err)
         {
             ThrowIfDisposed();
-
-            return (ToxConferenceType)ToxFunctions.ConferenceGetType(tox, ConferenceNumber);
+            err = ToxErrorConferenceGetType.Ok;
+            return ToxFunctions.Conference.GetType(tox, conferenceNumber, ref err);
         }
 
         /// <summary>
         /// Retrieves the title of a Conference.
         /// </summary>
-        /// <param name="ConferenceNumber">The Conference to retrieve the title of.</param>
+        /// <param name="conferenceNumber">The Conference to retrieve the title of.</param>
         /// <returns>The Conference's title on success.</returns>
-        public string GetConferenceTitle(int ConferenceNumber)
+        public string GetConferenceTitle(uint conferenceNumber)
         {
             ThrowIfDisposed();
 
-            byte[] title = new byte[ToxConstants.MaxNameLength];
-            int length = ToxFunctions.Conference.GetTitle(tox, ConferenceNumber, title, (uint)title.Length);
+            var err = ToxErrorConferenceTitle.Ok;
+            var size = ToxFunctions.Conference.GetTitleSize(this.tox, conferenceNumber, ref err);
+            if (err != ToxErrorConferenceTitle.Ok)
+            {
+                throw new InvalidOperationException();
+            }
 
-            if (length == -1)
-                return string.Empty;
+            byte[] title = new byte[size];
+            if (ToxFunctions.Conference.GetTitle(tox, conferenceNumber, title, ref err))
+            {
+                return ToxEncoding.GetString(title);
+            }
 
-            return Encoding.UTF8.GetString(title, 0, length);
+            return string.Empty;
         }
 
         /// <summary>
         /// Retrieves the public key of a peer.
         /// </summary>
-        /// <param name="ConferenceNumber">The Conference that the peer is in.</param>
+        /// <param name="conferenceNumber">The Conference that the peer is in.</param>
         /// <param name="peerNumber">The peer to retrieve the public key of.</param>
         /// <returns>The peer's public key on success.</returns>
-        public ToxKey GetConferencePeerPublicKey(int ConferenceNumber, int peerNumber)
+        public ToxKey GetConferencePeerPublicKey(uint conferenceNumber, uint peerNumber)
         {
             ThrowIfDisposed();
 
             byte[] key = new byte[ToxConstants.PublicKeySize];
-            int result = ToxFunctions.ConferencePeerPubkey(tox, ConferenceNumber, peerNumber, key);
 
-            if (result != 0)
-                return null;
+            var err = ToxErrorConferencePeerQuery.Ok;
+            if (ToxFunctions.Conference.Peer.GetPublicKey(tox, conferenceNumber, peerNumber, key, ref err) && err == ToxErrorConferencePeerQuery.Ok)
+            {
+                return new ToxKey(ToxKeyType.Public, key);
+            }
 
-            return new ToxKey(ToxKeyType.Public, key);
+            return null;
         }
 
         /// <summary>
@@ -1303,7 +1272,7 @@ namespace SharpTox.Core
         private readonly ToxCallbackHandler<ToxEventArgs.FriendRequestEventArgs, ToxDelegates.CallbackFriendRequestDelegate> friendRequest
             = new ToxCallbackHandler<ToxEventArgs.FriendRequestEventArgs, ToxDelegates.CallbackFriendRequestDelegate>(ToxCallbacks.Friend.FriendRequest, cb =>
                  (tox, publicKey, message, length, userData) =>
-                        cb(new ToxEventArgs.FriendRequestEventArgs(new ToxKey(ToxKeyType.Public, ToxTools.HexBinToString(publicKey)), Encoding.UTF8.GetString(message, 0, (int)length))));
+                        cb(new ToxEventArgs.FriendRequestEventArgs(new ToxKey(ToxKeyType.Public, ToxTools.HexBinToString(publicKey)), ToxEncoding.GetString(message, 0, (int)length))));
 
         /// <summary>
         /// Occurs when a friend request is received.
@@ -1317,7 +1286,7 @@ namespace SharpTox.Core
         private readonly ToxCallbackHandler<ToxEventArgs.FriendMessageEventArgs, ToxDelegates.CallbackFriendMessageDelegate> friendMessage
           = new ToxCallbackHandler<ToxEventArgs.FriendMessageEventArgs, ToxDelegates.CallbackFriendMessageDelegate>(ToxCallbacks.Friend.Message, cb =>
                 (tox, friendNumber, type, message, length, userdata) =>
-                    cb(new ToxEventArgs.FriendMessageEventArgs(friendNumber, Encoding.UTF8.GetString(message, 0, (int)length), type)));
+                    cb(new ToxEventArgs.FriendMessageEventArgs(friendNumber, ToxEncoding.GetString(message, 0, (int)length), type)));
 
         /// <summary>
         /// Occurs when a message is received from a friend.
@@ -1330,7 +1299,7 @@ namespace SharpTox.Core
         private readonly ToxCallbackHandler<ToxEventArgs.NameChangeEventArgs, ToxDelegates.CallbackNameChangeDelegate> friendNameChange
           = new ToxCallbackHandler<ToxEventArgs.NameChangeEventArgs, ToxDelegates.CallbackNameChangeDelegate>(ToxCallbacks.Friend.NameChange, cb =>
                     (tox, friendNumber, newName, length, userData) =>
-                            cb(new ToxEventArgs.NameChangeEventArgs(friendNumber, Encoding.UTF8.GetString(newName, 0, (int)length))));
+                            cb(new ToxEventArgs.NameChangeEventArgs(friendNumber, ToxEncoding.GetString(newName, 0, (int)length))));
 
         /// <summary>
         /// Occurs when a friend has changed his/her name.
@@ -1343,7 +1312,7 @@ namespace SharpTox.Core
         private readonly ToxCallbackHandler<ToxEventArgs.StatusMessageEventArgs, ToxDelegates.CallbackStatusMessageDelegate> friendStatusMessageChange
           = new ToxCallbackHandler<ToxEventArgs.StatusMessageEventArgs, ToxDelegates.CallbackStatusMessageDelegate>(ToxCallbacks.Friend.StatusMessageChange, cb =>
                     (tox, friendNumber, newStatus, length, userData) =>
-                            cb(new ToxEventArgs.StatusMessageEventArgs(friendNumber, Encoding.UTF8.GetString(newStatus, 0, (int)length))));
+                            cb(new ToxEventArgs.StatusMessageEventArgs(friendNumber, ToxEncoding.GetString(newStatus, 0, (int)length))));
 
         /// <summary>
         /// Occurs when a friend has changed their status message.
@@ -1446,7 +1415,7 @@ namespace SharpTox.Core
                                                                      fileNumber,
                                                                      kind,
                                                                      (long)fileSize,
-                                                                     filename == null ? string.Empty : Encoding.UTF8.GetString(filename, 0, filename.Length))));
+                                                                     filename == null ? string.Empty : ToxEncoding.GetString(filename, 0, filename.Length))));
 
         /// <summary>
         /// Occurs when a new file transfer request has been received.
@@ -1496,7 +1465,7 @@ namespace SharpTox.Core
         private readonly ToxCallbackHandler<ToxEventArgs.ConferenceMessageEventArgs, ToxDelegates.ConferenceMessageDelegate> conferenceMessage
           = new ToxCallbackHandler<ToxEventArgs.ConferenceMessageEventArgs, ToxDelegates.ConferenceMessageDelegate>(ToxCallbacks.Conference.Message, cb =>
                      (tox, conferenceNumber, peerNumber, type, message, length, userData) =>
-                            cb(new ToxEventArgs.ConferenceMessageEventArgs(conferenceNumber, peerNumber, Encoding.UTF8.GetString(message, 0, (int)length), type)));
+                            cb(new ToxEventArgs.ConferenceMessageEventArgs(conferenceNumber, peerNumber, ToxEncoding.GetString(message, 0, (int)length), type)));
 
         /// <summary>
         /// Occurs when a message is received from a Conference.
@@ -1521,7 +1490,7 @@ namespace SharpTox.Core
         private readonly ToxCallbackHandler<ToxEventArgs.ConferenceTitleEventArgs, ToxDelegates.ConferenceTitleDelegate> conferenceTitleChange
           = new ToxCallbackHandler<ToxEventArgs.ConferenceTitleEventArgs, ToxDelegates.ConferenceTitleDelegate>(ToxCallbacks.Conference.Title, cb =>
               (tox, conferenceNumber, peerNumber, title, length, userData) =>
-                            cb(new ToxEventArgs.ConferenceTitleEventArgs(conferenceNumber, peerNumber, Encoding.UTF8.GetString(title))));
+                            cb(new ToxEventArgs.ConferenceTitleEventArgs(conferenceNumber, peerNumber, ToxEncoding.GetString(title))));
 
         /// <summary>
         /// Occurs when the title of a Conference is changed.
@@ -1545,7 +1514,7 @@ namespace SharpTox.Core
 
         private readonly ToxCallbackHandler<ToxEventArgs.ConferencePeerNameEventArgs, ToxDelegates.ConferencePeerNameDelegate> conferencePeerName
           = new ToxCallbackHandler<ToxEventArgs.ConferencePeerNameEventArgs, ToxDelegates.ConferencePeerNameDelegate>(ToxCallbacks.Conference.PeerName, cb =>
-           (tox, conferenceNumber, peerNumber, name, length, userData) => cb(new ToxEventArgs.ConferencePeerNameEventArgs(conferenceNumber, peerNumber, Encoding.UTF8.GetString(name))));
+           (tox, conferenceNumber, peerNumber, name, length, userData) => cb(new ToxEventArgs.ConferencePeerNameEventArgs(conferenceNumber, peerNumber, ToxEncoding.GetString(name))));
 
         /// <summary>
         /// This event is triggered when a peer changes their name.
