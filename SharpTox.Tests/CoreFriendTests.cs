@@ -42,11 +42,7 @@ namespace SharpTox.Test
 
                 await Task.WhenAny(Task.Delay(10000), completed.Task);
 
-                if (!completed.Task.IsCompleted)
-                {
-                    Assert.Fail();
-                }
-
+                Assert.True(completed.Task.IsCompleted, "Timeout");
                 Assert.True(await completed.Task);
             }
         }

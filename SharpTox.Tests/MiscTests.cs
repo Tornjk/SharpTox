@@ -10,6 +10,8 @@ namespace SharpTox.Test
     [TestFixture]
     public class MiscTests
     {
+        private static TimeSpan Timeout = TimeSpan.FromSeconds(30);
+
         [Test]
         public async Task TestToxBootstrapAndConnect()
         {
@@ -31,7 +33,7 @@ namespace SharpTox.Test
                 };
 
                 tox.Start();
-                await Task.WhenAny(Task.Delay(30000), connected.Task);
+                await Task.WhenAny(Task.Delay(Timeout), connected.Task);
                 Assert.True(connected.Task.IsCompleted, "Timeout");
                 Assert.True(await connected.Task);
             }
@@ -57,7 +59,7 @@ namespace SharpTox.Test
                 };
 
                 tox.Start();
-                await Task.WhenAny(Task.Delay(12000), connected.Task);
+                await Task.WhenAny(Task.Delay(Timeout), connected.Task);
                 Assert.True(connected.Task.IsCompleted, "Timeout");
                 Assert.True(await connected.Task);
             }
