@@ -10,6 +10,7 @@ namespace SharpTox.Test
     [TestFixture]
     public class AvFriendTests
     {
+        // todo: unittests must be standalone
         private Tox tox1;
         private Tox tox2;
         private ToxAv _toxAv1;
@@ -29,7 +30,6 @@ namespace SharpTox.Test
             tox2.AddFriend(tox1.Id, "hey", out _);
 
             var connected = new TaskCompletionSource<bool>();
-
             tox1.OnFriendConnectionStatusChanged += (o, e) =>
             {
                 if (e.FriendNumber == friend2)
@@ -38,13 +38,22 @@ namespace SharpTox.Test
                 }
             };
 
+            var tsrc = new CancellationTokenSource();
+            var it = Task.Run(() =>
+            {
+                while (!tsrc.IsCancellationRequested)
+                {
+                    DoIterate();
+                }
+            });
+
             await Task.WhenAny(Task.Delay(10000), connected.Task);
 
             Assert.IsTrue(connected.Task.IsCompleted);
             Assert.True(await connected.Task);
 
-            bool answered = false;
-            _toxAv1.Call(0, 48, 3000);
+            var answered = new TaskCompletionSource<bool>();
+            _toxAv1.Call(0, 48, 3000, out _);
 
             _toxAv2.OnCallRequestReceived += (sender, e) =>
             {
@@ -54,10 +63,13 @@ namespace SharpTox.Test
 
             _toxAv1.OnCallStateChanged += (sender, e) =>
             {
-                answered = true;
+                answered.TrySetResult(true);
             };
 
-            while (!answered) { DoIterate(); }
+            Assert.True(await answered.Task);
+
+            tsrc.Cancel();
+            await it;
         }
 
         [OneTimeTearDown]
@@ -73,7 +85,7 @@ namespace SharpTox.Test
         private void DoIterate()
         {
             var time1 = Min(tox1.Iterate(), tox2.Iterate());
-            var time2 = TimeSpan.FromMilliseconds(Math.Min(_toxAv1.Iterate(), _toxAv2.Iterate()));
+            var time2 = Min(_toxAv1.Iterate(), _toxAv2.Iterate());
 
             Thread.Sleep(Min(time1, time2));
 
@@ -84,22 +96,22 @@ namespace SharpTox.Test
         [Test]
         public void TestToxAvAudioBitrateChange()
         {
-            int bitrate = 16;
-            var error = ToxAvErrorSetBitrate.Ok;
+            uint bitrate = 16;
+            var error = ToxAvErrorBitRateSet.Ok;
             bool result = _toxAv1.SetAudioBitrate(0, bitrate, out error);
 
-            if (!result || error != ToxAvErrorSetBitrate.Ok)
+            if (!result || error != ToxAvErrorBitRateSet.Ok)
                 Assert.Fail("Failed to set audio bitrate, error: {0}, result: {1}", error, result);
         }
 
         [Test]
         public void TestToxAvVideoBitrateChange()
         {
-            int bitrate = 2000;
-            var error = ToxAvErrorSetBitrate.Ok;
+            uint bitrate = 2000;
+            var error = ToxAvErrorBitRateSet.Ok;
             bool result = _toxAv1.SetVideoBitrate(0, bitrate, out error);
 
-            if (!result || error != ToxAvErrorSetBitrate.Ok)
+            if (!result || error != ToxAvErrorBitRateSet.Ok)
                 Assert.Fail("Failed to set video bitrate, error: {0}, result: {1}", error, result);
         }
 

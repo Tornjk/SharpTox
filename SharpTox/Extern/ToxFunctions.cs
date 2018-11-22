@@ -411,46 +411,6 @@ namespace SharpTox.Core
         }
     }
 
-    sealed class ToxCallbackHandler<TEventArgs, TDelegate> where TEventArgs : EventArgs where TDelegate : class
-    {
-        private readonly Action<ToxHandle, TDelegate> register;
-        private readonly Func<Action<TEventArgs>, TDelegate> create;
-
-        private TDelegate tDelegate;
-
-        private event EventHandler<TEventArgs> @event;
-
-        public ToxCallbackHandler(Action<ToxHandle, TDelegate> register, Func<Action<TEventArgs>, TDelegate> create)
-        {
-            this.register = register ?? throw new ArgumentNullException(nameof(register));
-            this.create = create ?? throw new ArgumentNullException(nameof(create));
-        }
-
-        public void Add(Tox tox, EventHandler<TEventArgs> handler)
-        {
-            if (this.tDelegate == null)
-            {
-                this.tDelegate = this.create(args => this.OnCallback(tox, args));
-                this.register(tox.Handle, this.tDelegate);
-            }
-
-            this.@event += handler;
-        }
-
-        public void Remove(Tox tox, EventHandler<TEventArgs> handler)
-        {
-            if (this.@event.GetInvocationList().Length == 1)
-            {
-                this.register(tox.Handle, null);
-                this.tDelegate = null;
-            }
-
-            this.@event -= handler;
-        }
-
-        private void OnCallback(Tox tox, TEventArgs args) => this.@event?.Invoke(tox, args);
-    }
-
     /// <summary>
     /// Callbacks of Native tox.h
     /// </summary>
@@ -532,5 +492,50 @@ namespace SharpTox.Core
         }
     }
 
+    class BaseToxCallbackHandler<THandle, TEventArgs, TDelegate> where THandle : SafeHandle where TEventArgs : EventArgs where TDelegate : class{
 
+        protected readonly Action<THandle, TDelegate> register;
+        protected readonly Func<Action<TEventArgs>, TDelegate> create;
+
+        protected TDelegate tDelegate;
+
+        protected BaseToxCallbackHandler(Action<THandle, TDelegate> register, Func<Action<TEventArgs>, TDelegate> create)
+        {
+            this.register = register ?? throw new ArgumentNullException(nameof(register));
+            this.create = create ?? throw new ArgumentNullException(nameof(create));
+        }
+    }
+
+    sealed class ToxCallbackHandler<TEventArgs, TDelegate> : BaseToxCallbackHandler<ToxHandle, TEventArgs, TDelegate> where TEventArgs : EventArgs where TDelegate : class
+    {
+        public ToxCallbackHandler(Action<ToxHandle, TDelegate> register, Func<Action<TEventArgs>, TDelegate> create) : base(register, create)
+        {
+        }
+
+        private event EventHandler<TEventArgs> @event;
+
+        public void Add(Tox tox, EventHandler<TEventArgs> handler)
+        {
+            if (this.tDelegate == null)
+            {
+                this.tDelegate = this.create(args => this.OnCallback(tox, args));
+                this.register(tox.Handle, this.tDelegate);
+            }
+
+            this.@event += handler;
+        }
+
+        public void Remove(Tox tox, EventHandler<TEventArgs> handler)
+        {
+            if (this.@event.GetInvocationList().Length == 1)
+            {
+                this.register(tox.Handle, null);
+                this.tDelegate = null;
+            }
+
+            this.@event -= handler;
+        }
+
+        private void OnCallback(Tox tox, TEventArgs args) => this.@event?.Invoke(tox, args);
+    }
 }

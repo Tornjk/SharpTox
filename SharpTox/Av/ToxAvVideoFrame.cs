@@ -3,32 +3,37 @@ using System.Runtime.InteropServices;
 
 namespace SharpTox.Av
 {
-    public class ToxAvVideoFrame
+    public sealed class ToxAvVideoFrame
     {
-        public byte[] Y { get; private set; }
-        public byte[] U { get; private set; }
-        public byte[] V { get; private set; }
+        public byte[] Y { get; }
 
-        public int YStride { get; private set; }
-        public int UStride { get; private set; }
-        public int VStride { get; private set; }
+        public int YStride { get; }
 
-        public int Width { get; private set; }
-        public int Height { get; private set; }
+        public byte[] U { get; }
+
+        public int UStride { get; }
+
+        public byte[] V { get; }
+
+        public int VStride { get; }
+
+        public ushort Width { get; }
+
+        public ushort Height { get; }
 
         //this relies on the caller to call vpx_img_free (which is currently the case in toxav)
         internal ToxAvVideoFrame(ushort width, ushort height, IntPtr y, IntPtr u, IntPtr v, int yStride, int uStride, int vStride)
         {
-            Width = width;
-            Height = height;
+            this.Width = width;
+            this.Height = height;
 
-            YStride = yStride;
-            UStride = uStride;
-            VStride = vStride;
+            this.YStride = yStride;
+            this.UStride = uStride;
+            this.VStride = vStride;
 
-            Y = new byte[Math.Max(width, Math.Abs(yStride)) * height];
-            U = new byte[Math.Max(width / 2, Math.Abs(uStride)) * (height / 2)];
-            V = new byte[Math.Max(width / 2, Math.Abs(vStride)) * (height / 2)];
+            this.Y = new byte[Math.Max(width, Math.Abs(yStride)) * height];
+            this.U = new byte[Math.Max(width / 2, Math.Abs(uStride)) * (height / 2)];
+            this.V = new byte[Math.Max(width / 2, Math.Abs(vStride)) * (height / 2)];
 
             //TODO (?): use unsafe code to access the data directly instead of copying it over
             Marshal.Copy(y, Y, 0, Y.Length);
@@ -36,18 +41,18 @@ namespace SharpTox.Av
             Marshal.Copy(v, V, 0, V.Length);
         }
 
-        public ToxAvVideoFrame(int width, int height, byte[] y, byte[] u, byte[] v)
+        public ToxAvVideoFrame(ushort width, ushort height, byte[] y, byte[] u, byte[] v)
         {
-            Width = width;
-            Height = height;
+            this.Width = width;
+            this.Height = height;
 
-            Y = y;
-            U = u;
-            V = v;
+            this.Y = y;
+            this.U = u;
+            this.V = v;
 
-            YStride = width;
-            UStride = width / 2;
-            VStride = width / 2;
+            this.YStride = width;
+            this.UStride = width / 2;
+            this.VStride = width / 2;
         }
     }
 }

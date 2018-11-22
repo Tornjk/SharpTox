@@ -34,12 +34,12 @@ namespace SharpTox.Av
     public enum ToxAvFriendCallState
     {
         Paused = 0,
-        Error = 1 << 0,
-        Finished = 1 << 1,
-        SendingAudio = 1 << 2,
-        SendingVideo = 1 << 3,
-        ReceivingAudio = 1 << 4,
-        ReceivingVideo = 1 << 5,
+        Error = 1,
+        Finished = 2,
+        SendingAudio = 4,
+        SendingVideo = 8,
+        ReceivingAudio = 16,
+        ReceivingVideo = 32,
     }
 
     public enum ToxAvCallControl
@@ -62,12 +62,11 @@ namespace SharpTox.Av
         InvalidTransition
     }
 
-    public enum ToxAvErrorSetBitrate
+    public enum ToxAvErrorBitRateSet
     {
         Ok,
         Sync,
-        InvalidAudioBitrate,
-        InvalidVideoBitrate,
+        InvalidBitrate,
         FriendNotFound,
         FriendNotInCall
     }
@@ -79,8 +78,8 @@ namespace SharpTox.Av
         FrienNotFound,
         FriendNotInCall,
         Sync,
-        FrameInvalid,
-        BitrateNotSet,
+        Invalid,
+        PayloadTypeDisabled,
         RtpFailed
     }
 }

@@ -7,92 +7,103 @@ namespace SharpTox.Av
     {
         public abstract class CallBaseEventArgs : EventArgs
         {
-            public int FriendNumber { get; private set; }
+            public uint FriendNumber { get; }
 
-            protected CallBaseEventArgs(int friendNumber)
+            protected CallBaseEventArgs(uint friendNumber)
             {
-                FriendNumber = friendNumber;
+                this.FriendNumber = friendNumber;
             }
         }
 
         public class CallRequestEventArgs : CallBaseEventArgs
         {
-            public ToxAvFriendCallState State { get; private set; }
+            public ToxAvFriendCallState State { get; }
 
-            public bool AudioEnabled { get; private set; }
-            public bool VideoEnabled { get; private set; }
+            public bool AudioEnabled { get; }
 
-            public CallRequestEventArgs(int friendNumber, bool audioEnabled, bool videoEnabled)
+            public bool VideoEnabled { get; }
+
+            public CallRequestEventArgs(uint friendNumber, bool audioEnabled, bool videoEnabled)
                 : base(friendNumber)
             {
-                AudioEnabled = audioEnabled;
-                VideoEnabled = videoEnabled;
+                this.AudioEnabled = audioEnabled;
+                this.VideoEnabled = videoEnabled;
             }
         }
 
         public class CallStateEventArgs : CallBaseEventArgs
         {
-            public ToxAvFriendCallState State { get; private set; }
+            public ToxAvFriendCallState State { get; }
 
-            public CallStateEventArgs(int friendNumber, ToxAvFriendCallState state)
-                : base(friendNumber)
+            public CallStateEventArgs(uint friendNumber, ToxAvFriendCallState state) : base(friendNumber)
             {
-                State = state;
+                this.State = state;
             }
         }
 
-        public class BitrateStatusEventArgs : CallBaseEventArgs
+        public sealed class AudioBitrateEventArgs : CallBaseEventArgs
         {
-            public int AudioBitrate { get; private set; }
-            public int VideoBitrate { get; private set; }
+            public uint Bitrate { get; }
 
-            public BitrateStatusEventArgs(int friendNumber, int audioBitrate, int videoBitrate)
+            public AudioBitrateEventArgs(uint friendNumber, uint bitrate)
                 : base(friendNumber)
             {
-                AudioBitrate = audioBitrate;
-                VideoBitrate = videoBitrate;
+                this.Bitrate = bitrate;
+            }
+        }
+
+        public sealed class VideoBitrateEventArgs : CallBaseEventArgs
+        {
+            public uint Bitrate { get; }
+
+            public VideoBitrateEventArgs(uint friendNumber, uint bitrate)
+                : base(friendNumber)
+            {
+                this.Bitrate = bitrate;
             }
         }
 
         public class AudioFrameEventArgs : CallBaseEventArgs
         {
-            public ToxAvAudioFrame Frame { get; private set; }
+            public ToxAvAudioFrame Frame { get; }
 
-            public AudioFrameEventArgs(int friendNumber, ToxAvAudioFrame frame)
+            public AudioFrameEventArgs(uint friendNumber, ToxAvAudioFrame frame)
                 : base(friendNumber)
             {
-                Frame = frame;
+                this.Frame = frame;
             }
         }
 
         public class VideoFrameEventArgs : CallBaseEventArgs
         {
-            public ToxAvVideoFrame Frame { get; private set; }
+            public ToxAvVideoFrame Frame { get; }
 
-            public VideoFrameEventArgs(int friendNumber, ToxAvVideoFrame frame)
+            public VideoFrameEventArgs(uint friendNumber, ToxAvVideoFrame frame)
                 : base(friendNumber)
             {
-                Frame = frame;
+                this.Frame = frame;
             }
         }
 
         public class GroupAudioDataEventArgs : EventArgs
         {
-            public int GroupNumber { get; private set; }
-            public int PeerNumber { get; private set; }
+            public uint GroupNumber { get; }
 
-            public short[] Data { get; private set; }
+            public uint PeerNumber { get; }
 
-            public int Channels { get; private set; }
-            public int SampleRate { get; private set; }
+            public short[] Data { get; }
 
-            public GroupAudioDataEventArgs(int groupNumber, int peerNumber, short[] data, int channels, int sampleRate)
+            public byte Channels { get; }
+
+            public uint SampleRate { get; }
+
+            public GroupAudioDataEventArgs(uint groupNumber, uint peerNumber, short[] data, byte channels, uint sampleRate)
             {
-                GroupNumber = groupNumber;
-                PeerNumber = peerNumber;
-                Data = data;
-                Channels = channels;
-                SampleRate = sampleRate;
+                this.GroupNumber = groupNumber;
+                this.PeerNumber = peerNumber;
+                this.Data = data;
+                this.Channels = channels;
+                this.SampleRate = sampleRate;
             }
         }
     }
