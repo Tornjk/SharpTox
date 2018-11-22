@@ -55,11 +55,11 @@ namespace SharpTox.Test
                 var connected = new TaskCompletionSource<bool>();
                 tox.OnConnectionStatusChanged += (o, e) =>
                 {
-                    connected.SetResult(e.Status != ToxConnectionStatus.None);
+                    connected.TrySetResult(e.Status != ToxConnectionStatus.None);
                 };
 
                 tox.Start();
-                await Task.WhenAny(Task.Delay(Timeout), connected.Task);
+                await Task.WhenAny(Task.Delay(Timeout * 5), connected.Task);
                 Assert.True(connected.Task.IsCompleted, "Timeout");
                 Assert.True(await connected.Task);
             }

@@ -216,10 +216,17 @@ namespace SharpTox.Core
 
             if (disposing)
             {
+                // security critical
                 if (_cancelTokenSource != null)
                 {
-                    _cancelTokenSource.Cancel();
-                    _cancelTokenSource.Dispose();
+                    try
+                    {
+                        _cancelTokenSource.Cancel();
+                        _cancelTokenSource.Dispose();
+                    }
+                    catch (ObjectDisposedException) { }
+
+                    _cancelTokenSource = null;
                 }
             }
 
@@ -266,7 +273,7 @@ namespace SharpTox.Core
         /// Runs the tox_iterate once in the current thread.
         /// </summary>
         /// <returns>The next timeout.</returns>
-        public int Iterate()
+        public TimeSpan Iterate()
         {
             ThrowIfDisposed();
 
@@ -276,10 +283,10 @@ namespace SharpTox.Core
             return DoIterate();
         }
 
-        private int DoIterate()
+        private TimeSpan DoIterate()
         {
             ToxFunctions.Iterate(tox);
-            return (int)ToxFunctions.IterationInterval(tox);
+            return TimeSpan.FromMilliseconds(ToxFunctions.IterationInterval(tox));
         }
 
         private void Loop()
@@ -289,13 +296,12 @@ namespace SharpTox.Core
 
             Task.Factory.StartNew(async () =>
             {
-                while (_running)
+                while (_running && !_disposed)
                 {
                     if (_cancelTokenSource.IsCancellationRequested)
                         break;
 
-                    int delay = DoIterate();
-                    await Task.Delay(delay);
+                    await Task.Delay(DoIterate());
                 }
             }, _cancelTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }

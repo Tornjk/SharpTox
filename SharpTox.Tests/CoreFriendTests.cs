@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using SharpTox.Core;
 using System;
 using System.Collections.Generic;
@@ -11,6 +11,8 @@ namespace SharpTox.Test
     [TestFixture]
     public class CoreFriendTests
     {
+
+
         private Tox tox1;
         private Tox tox2;
 
@@ -26,7 +28,7 @@ namespace SharpTox.Test
 
             using (var tokenSource = new CancellationTokenSource())
             {
-                _ = Task.Run(() =>
+                var it = Task.Run(() =>
                 {
                     while (!tokenSource.IsCancellationRequested)
                     {
@@ -44,6 +46,9 @@ namespace SharpTox.Test
 
                 Assert.True(completed.Task.IsCompleted, "Timeout");
                 Assert.True(await completed.Task);
+
+                tokenSource.Cancel();
+                await it;
             }
         }
 
@@ -56,10 +61,10 @@ namespace SharpTox.Test
 
         private void DoIterate()
         {
-            int time1 = tox1.Iterate();
-            int time2 = tox2.Iterate();
+            var time1 = tox1.Iterate();
+            var time2 = tox2.Iterate();
 
-            Thread.Sleep(Math.Min(time1, time2));
+            Thread.Sleep(time1 < time2 ? time1 : time2);
         }
 
         [Test]

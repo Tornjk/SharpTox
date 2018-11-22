@@ -194,50 +194,46 @@ namespace SharpTox.Test
         }
 
         [Test]
-        [Ignore("Todo")]
-        public void TestToxFriendRequest()
+        public async Task TestToxFriendRequest()
         {
-            var tox1 = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = true });
-            var tox2 = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = true });
-            var error = ToxErrorFriendAdd.Ok;
-            string message = "Hey, this is a test friend request.";
-            //bool testFinished = false;
-
-            Bootstrap(tox1);
-            Bootstrap(tox2);
-
-            tox1.AddFriend(tox2.Id, message, out error);
-            if (error != ToxErrorFriendAdd.Ok)
-                Assert.Fail("Failed to add friend: {0}", error);
-
-            tox2.OnFriendRequestReceived += (sender, args) =>
+            using (var tox1 = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = true }))
+            using (var tox2 = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = true }))
             {
-                if (args.Message != message)
-                    Assert.Fail("Message received in the friend request is not the same as the one that was sent");
 
-                tox2.AddFriendNoRequest(args.PublicKey, out error);
-                if (error != ToxErrorFriendAdd.Ok)
-                    Assert.Fail("Failed to add friend (no request): {0}", error);
+                var error = ToxErrorFriendAdd.Ok;
+                string message = "Hey, this is a test friend request.";
+                //bool testFinished = false;
 
-                if (!tox2.FriendExists(0))
-                    Assert.Fail("Friend doesn't exist according to core");
+                Bootstrap(tox1);
+                Bootstrap(tox2);
 
-                //testFinished = true;
-            };
+                var completed = new TaskCompletionSource<bool>();
+                tox2.OnFriendRequestReceived += (sender, args) =>
+                {
+                    Assert.AreEqual(message, args.Message, "Message received in the friend request is not the same as the one that was sent");
 
-            tox1.Start();
-            tox2.Start();
+                    var friend = tox2.AddFriendNoRequest(args.PublicKey, out error);
+                    Assert.AreEqual(ToxErrorFriendAdd.Ok, error, "Failed to add friend (no request): {0}", error);
 
-            //while (!testFinished && tox1.GetFriendConnectionStatus(0) == ToxConnectionStatus.None)
-            //{
-            //    //int time1 = tox1.Iterate();
-            //    //int time2 = tox2.Iterate();
+                    Assert.IsTrue(tox2.FriendExists(friend), "Friend doesn't exist according to core");
 
-            //    Thread.Sleep(50);
-            //}
+                    completed.TrySetResult(true);
+                };
 
-            tox1.Dispose();
-            tox2.Dispose();
+                tox1.AddFriend(tox2.Id, message, out error);
+                Assert.AreEqual(ToxErrorFriendAdd.Ok, error, "Failed to add friend: {0}", error);
+
+                tox1.Start();
+                tox2.Start();
+
+                await Task.WhenAny(Task.Delay(TimeSpan.FromMinutes(1)), completed.Task);
+
+                Assert.True(completed.Task.IsCompleted, "Timeout");
+                Assert.True(await completed.Task);
+
+                tox1.Stop();
+                tox2.Stop();
+            }
         }
 
         [Test]

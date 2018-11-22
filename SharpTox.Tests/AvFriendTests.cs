@@ -18,7 +18,7 @@ namespace SharpTox.Test
         [OneTimeSetUp]
         public async Task Init()
         {
-            var options = new ToxOptions { Ipv6Enabled = true, UdpEnabled = true };// new ToxOptions_DEPRECATED(true, true);
+            var options = new ToxOptions { Ipv6Enabled = true, UdpEnabled = true };
             tox1 = new Tox(options);
             tox2 = new Tox(options);
 
@@ -40,11 +40,7 @@ namespace SharpTox.Test
 
             await Task.WhenAny(Task.Delay(10000), connected.Task);
 
-            if (!connected.Task.IsCompleted)
-            {
-                Assert.Fail();
-            }
-
+            Assert.IsTrue(connected.Task.IsCompleted);
             Assert.True(await connected.Task);
 
             bool answered = false;
@@ -76,10 +72,13 @@ namespace SharpTox.Test
 
         private void DoIterate()
         {
-            int time1 = Math.Min(tox1.Iterate(), tox2.Iterate());
-            int time2 = Math.Min(_toxAv1.Iterate(), _toxAv2.Iterate());
+            var time1 = Min(tox1.Iterate(), tox2.Iterate());
+            var time2 = TimeSpan.FromMilliseconds(Math.Min(_toxAv1.Iterate(), _toxAv2.Iterate()));
 
-            Thread.Sleep(Math.Min(time1, time2));
+            Thread.Sleep(Min(time1, time2));
+
+            TimeSpan Min(TimeSpan a, TimeSpan b)
+                => a < b ? a : b;
         }
 
         [Test]
