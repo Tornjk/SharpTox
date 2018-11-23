@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using SharpTox.Core;
 using SharpTox.Encryption;
 using System;
@@ -122,31 +122,34 @@ namespace SharpTox.Test
             byte[] garbage = new byte[0xBEEF];
             new Random().NextBytes(garbage);
 
-            byte[] encryptedData = ToxEncryption.EncryptData(garbage, password);
+            byte[] encryptedData = ToxEncryption.Encrypt(garbage, password, out _);
             Assert.IsNotNull(encryptedData, "Failed to encrypt the data");
 
-            byte[] decryptedData = ToxEncryption.DecryptData(encryptedData, password);
+            byte[] decryptedData = ToxEncryption.Decrypt(encryptedData, password, out _);
             Assert.IsNotNull(decryptedData, "Failed to decrypt the data");
 
             if (!garbage.SequenceEqual(decryptedData))
+            {
                 Assert.Fail("Original data is not equal to the decrypted data");
+            }
         }
 
         [Test]
         public void TestToxEncryptionLoad()
         {
-            using (var tox1 = new Tox(ToxOptions.Default()))
+            using (var options = ToxOptions.Default())
+            using (var tox1 = new Tox(options))
             {
                 tox1.Name = "Test";
                 tox1.StatusMessage = "Hey";
 
                 string password = "heythisisatest";
-                var data = tox1.GetData(password);
+                var data = tox1.GetData(password, out _);
 
                 Assert.IsNotNull(data, "Failed to encrypt the Tox data");
                 Assert.IsTrue(data.IsEncrypted, "We encrypted the data, but toxencryptsave thinks we didn't");
 
-                using (var tox2 = new Tox(ToxOptions.Default(), ToxData.FromBytes(data.Bytes), password))
+                using (var tox2 = new Tox(options, ToxData.FromBytes(data.Bytes), password))
                 {
                     Assert.AreEqual(tox1.Id, tox2.Id, "Failed to load tox data correctly, tox id's don't match");
                     Assert.AreEqual(tox1.Name, tox2.Name, "Failed to load tox data correctly, names don't match");

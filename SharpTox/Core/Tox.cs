@@ -1,4 +1,4 @@
-﻿using SharpTox.Encryption;
+using SharpTox.Encryption;
 using System;
 using System.Text;
 using System.Threading;
@@ -145,26 +145,35 @@ namespace SharpTox.Core
         /// <param name="key">The key to decrypt the given encrypted Tox profile data.</param>
         public Tox(ToxOptions options, ToxData data, ToxEncryptionKey key)
         {
-            this.Options = options ?? throw new ArgumentNullException(nameof(options));
+            if(options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
             if (data == null)
-                throw new ArgumentNullException("data");
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
 
             if (key == null)
-                throw new ArgumentNullException("key");
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
 
             if (!data.IsEncrypted)
-                throw new Exception("This data is not encrypted");
+            {
+                throw new ArgumentException("data is not encrypted");
+            }
 
             var decryptError = ToxErrorDecryption.Ok;
-            byte[] decryptedData = ToxEncryption.DecryptData(data.Bytes, key, out decryptError);
-
-            if (decryptError != ToxErrorDecryption.Ok)
+            byte[] decryptedData = key.Decrypt(data.Bytes, out decryptError);
+            if (decryptedData == null || decryptError != ToxErrorDecryption.Ok)
             {
                 throw new ArgumentException($"Failed to decrypt with the given key, error: {decryptError}");
             }
 
             options.SetData(decryptedData, ToxSavedataType.ToxSave);
-            tox = options.Create();
+            this.tox = options.Create();
         }
 
         /// <summary>
@@ -188,7 +197,7 @@ namespace SharpTox.Core
 
             var decryptError = ToxErrorDecryption.Ok;
 
-            byte[] decryptedData = ToxEncryption.DecryptData(data.Bytes, password, out decryptError);
+            byte[] decryptedData = ToxEncryption.Decrypt(data.Bytes, password, out decryptError);
 
             if (decryptError != ToxErrorDecryption.Ok)
             {
@@ -360,7 +369,7 @@ namespace SharpTox.Core
                 throw new ArgumentNullException("node");
 
             error = ToxErrorBootstrap.Ok;
-            return ToxFunctions.AddTcpRelay(tox, node.Address, (ushort)node.Port, node.PublicKey.GetBytes(), ref error);
+            return ToxFunctions.AddTcpRelay(tox, node.Address, node.Port, node.PublicKey.GetBytes(), ref error);
         }
 
         /// <summary>
@@ -389,7 +398,7 @@ namespace SharpTox.Core
                 throw new ArgumentNullException("node");
 
             error = ToxErrorBootstrap.Ok;
-            return ToxFunctions.Bootstrap(tox, node.Address, (ushort)node.Port, node.PublicKey.GetBytes(), ref error);
+            return ToxFunctions.Bootstrap(tox, node.Address, node.Port, node.PublicKey.GetBytes(), ref error);
         }
 
         /// <summary>
@@ -574,22 +583,35 @@ namespace SharpTox.Core
         /// </summary>
         /// <param name="key">The key to encrypt the Tox data with.</param>
         /// <returns></returns>
-        public ToxData GetData(ToxEncryptionKey key)
+        public ToxData GetData(ToxEncryptionKey key, out ToxErrorEncryption error)
         {
             ThrowIfDisposed();
+            if(key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
 
-            var data = GetData();
-            byte[] encrypted = ToxEncryption.EncryptData(data.Bytes, key);
+            var data = this.GetData();
+
+            byte[] encrypted = key.Encrypt(data.Bytes, out error);
+            if(error != ToxErrorEncryption.Ok)
+            {
+                return null;
+            }
 
             return ToxData.FromBytes(encrypted);
         }
 
-        public ToxData GetData(string password)
+        public ToxData GetData(string password, out ToxErrorEncryption error)
         {
             ThrowIfDisposed();
 
-            var data = GetData();
-            byte[] encrypted = ToxEncryption.EncryptData(data.Bytes, password);
+            var data = this.GetData();
+            byte[] encrypted = ToxEncryption.Encrypt(data.Bytes, password, out error);
+            if(error != ToxErrorEncryption.Ok)
+            {
+                return null;
+            }
 
             return ToxData.FromBytes(encrypted);
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace SharpTox.Core
 {
@@ -77,6 +78,7 @@ namespace SharpTox.Core
         [Obsolete("Use the function instead")]
         public const int MaxCustomPacketSize = 1373;
 
+        internal static readonly Encoding Encoding = Encoding.UTF8;
 
         //Constants for the the tox data file
         internal const uint Cookie = 0x15ed1b1f;

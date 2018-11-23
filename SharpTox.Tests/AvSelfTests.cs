@@ -1,9 +1,9 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using SharpTox.Av;
 using SharpTox.Core;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpTox.Test
 {
@@ -11,55 +11,72 @@ namespace SharpTox.Test
     public class AvSelfTests
     {
         [Test]
-        [Ignore("Todo")]
-        public void TestToxAvCallAndAnswer()
+        public async Task TestToxAvCallAndAnswer()
         {
-            //var options = new ToxOptions_DEPRECATED(true, true);
-            //var tox1 = new Tox(options);
-            //var tox2 = new Tox(options);
+            var options = new ToxOptions { Ipv6Enabled = true, UdpEnabled = true };
+            using (var tox1 = new Tox(options))
+            using (var tox2 = new Tox(options))
+            using (var toxAv1 = new ToxAv(tox1))
+            using (var toxAv2 = new ToxAv(tox2))
+            {
+                var tokenSource = new CancellationTokenSource();
+                var it = Task.Run(async () =>
+                {
+                    while (!tokenSource.IsCancellationRequested)
+                    {
+                        var time1 = Min(tox1.Iterate(), tox2.Iterate());
+                        var time2 = Min(toxAv1.Iterate(), toxAv2.Iterate());
 
-            //var toxAv1 = new ToxAv(tox1);
-            //var toxAv2 = new ToxAv(tox2);
+                        await Task.Delay(Min(time1, time2));
 
-            //bool testFinished = false;
+                        TimeSpan Min(TimeSpan a, TimeSpan b)
+                            => a < b ? a : b;
+                    }
+                });
 
-            //Task.Run(async () =>
-            //{
-            //    while (!testFinished)
-            //    {
-            //        int time1 = tox1.Iterate();
-            //        int time2 = tox2.Iterate();
+                tox1.AddFriend(tox2.Id, "hey", out _);
+                tox2.AddFriend(tox1.Id, "hey", out _);
 
-            //        await Task.Delay(Math.Min(time1, time2));
-            //    }
-            //});
+                var tox1connected = new TaskCompletionSource<bool>();
+                tox1.OnConnectionStatusChanged += (o, e) =>
+                {
+                    tox1connected.TrySetResult(e.Status != ToxConnectionStatus.None);
+                };
 
-            //tox1.AddFriend(tox2.Id, "hey");
-            //tox2.AddFriend(tox1.Id, "hey");
+                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(20), tox1connected.Task);
 
-            //while (tox1.GetFriendConnectionStatus(0) == ToxConnectionStatus.None) { Thread.Sleep(10); }
+                toxAv1.Call(0, 48, 30000, out _);
 
-            //bool answered = false;
-            //toxAv1.Call(0, 48, 30000);
+                var callrequest = new TaskCompletionSource<bool>();
+                toxAv2.OnCallRequestReceived += (sender, e) =>
+                {
+                    var error2 = ToxAvErrorAnswer.Ok;
+                    callrequest.TrySetResult(toxAv2.Answer(e.FriendNumber, 48, 30000, out error2));
+                };
 
-            //toxAv2.OnCallRequestReceived += (sender, e) =>
-            //{
-            //    var error2 = ToxAvErrorAnswer.Ok;
-            //    bool result2 = toxAv2.Answer(e.FriendNumber, 48, 30000, out error2);
-            //};
+                var answered = new TaskCompletionSource<bool>();
+                toxAv1.OnCallStateChanged += (sender, e) =>
+                {
+                    answered.TrySetResult(true);
+                };
 
-            //toxAv1.OnCallStateChanged += (sender, e) =>
-            //{
-            //    answered = true;
-            //};
+                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(15), callrequest.Task);
+                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(10), answered.Task);
+                tokenSource.Cancel();
 
-            //while (!answered) { Thread.Sleep(10); }
+                await it;
+            }
+        }
+    }
 
-            //testFinished = true;
-            //toxAv1.Dispose();
-            //toxAv2.Dispose();
-            //tox1.Dispose();
-            //tox2.Dispose();
+    public static class ToxTest
+    {
+
+        public static async Task AssertTimeout(TimeSpan timeout, Task<bool> t)
+        {
+            await Task.WhenAny(Task.Delay(timeout), t);
+            Assert.IsTrue(t.IsCompleted, $"Timeout after: {timeout}");
+            Assert.IsTrue(await t);
         }
     }
 }

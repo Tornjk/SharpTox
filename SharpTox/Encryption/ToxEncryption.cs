@@ -1,150 +1,74 @@
 ﻿using System;
-using System.Text;
+using SharpTox.Core;
 
 namespace SharpTox.Encryption
 {
     public static class ToxEncryption
     {
-        internal const int SaltLength = 32;
-        internal const int KeyLength = 32;
-        internal const int EncryptionExtraLength = 80;
-
-        public static byte[] EncryptData(byte[] data, ToxEncryptionKey key, out ToxErrorEncryption error)
+        public static byte[] Encrypt(byte[] data, string password, out ToxErrorEncryption error)
         {
             if (data == null)
-                throw new ArgumentNullException("data");
-
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            byte[] output = new byte[data.Length + EncryptionExtraLength];
-            var pass = key.ToPassKey();
-            error = ToxErrorEncryption.Ok;
-
-            if (!ToxEncryptionFunctions.PassKeyEncrypt(data, (uint)data.Length, ref pass, output, ref error) || error != ToxErrorEncryption.Ok)
-                return null;
-
-            return output;
-        }
-
-        public static byte[] EncryptData(byte[] data, ToxEncryptionKey key)
-        {
-            var error = ToxErrorEncryption.Ok;
-            return EncryptData(data, key, out error);
-        }
-
-        public static byte[] EncryptData(byte[] data, string password, out ToxErrorEncryption error)
-        {
-            if (data == null)
-                throw new ArgumentNullException("data");
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
 
             if (password == null)
-                throw new ArgumentNullException("password");
+            {
+                throw new ArgumentNullException(nameof(password));
+            }
 
-            byte[] output = new byte[data.Length + EncryptionExtraLength];
-            byte[] passBytes = Encoding.UTF8.GetBytes(password);
+            byte[] cipher = new byte[data.Length + ToxEncryptionConstants.EncryptionExtraLength];
+            byte[] passBytes = ToxConstants.Encoding.GetBytes(password);
             error = ToxErrorEncryption.Ok;
 
-            if (!ToxEncryptionFunctions.PassEncrypt(data, (uint)data.Length, passBytes, (uint)passBytes.Length, output, ref error) || error != ToxErrorEncryption.Ok)
-                return null;
+            var success = ToxEncryptionFunctions.Pass.Encrypt(data, (uint)data.Length, passBytes, (uint)passBytes.Length, cipher, ref error);
+            if (success && error == ToxErrorEncryption.Ok)
+            {
+                return cipher;
+            }
 
-            return output;
+            return null;
         }
 
-        public static byte[] EncryptData(byte[] data, string password)
-        {
-            var error = ToxErrorEncryption.Ok;
-            return EncryptData(data, password, out error);
-        }
-
-        public static byte[] DecryptData(byte[] data, ToxEncryptionKey key, out ToxErrorDecryption error)
+        public static byte[] Decrypt(byte[] data, string password, out ToxErrorDecryption error)
         {
             if (data == null)
-                throw new ArgumentNullException("data");
-
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            byte[] output = new byte[data.Length - EncryptionExtraLength];
-            var pass = key.ToPassKey();
-            error = ToxErrorDecryption.Ok;
-
-            if (!ToxEncryptionFunctions.PassKeyDecrypt(data, (uint)data.Length, ref pass, output, ref error) || error != ToxErrorDecryption.Ok)
-                return null;
-
-            return output;
-        }
-
-        public static byte[] DecryptData(byte[] data, ToxEncryptionKey key)
-        {
-            var error = ToxErrorDecryption.Ok;
-            return DecryptData(data, key, out error);
-        }
-
-        public static byte[] DecryptData(byte[] data, string password, out ToxErrorDecryption error)
-        {
-            if (data == null)
-                throw new ArgumentNullException("data");
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
 
             if (password == null)
-                throw new ArgumentNullException("password");
+            {
+                throw new ArgumentNullException(nameof(password));
+            }
 
-            byte[] output = new byte[data.Length - EncryptionExtraLength];
-            byte[] passBytes = Encoding.UTF8.GetBytes(password);
+            byte[] plain = new byte[data.Length - ToxEncryptionConstants.EncryptionExtraLength];
+            byte[] passBytes = ToxConstants.Encoding.GetBytes(password);
             error = ToxErrorDecryption.Ok;
 
-            if (!ToxEncryptionFunctions.PassDecrypt(data, (uint)data.Length, passBytes, (uint)passBytes.Length, output, ref error) || error != ToxErrorDecryption.Ok)
-                return null;
+            var success = ToxEncryptionFunctions.Pass.Decrypt(data, (uint)data.Length, passBytes, (uint)passBytes.Length, plain, ref error);
+            if (success && error == ToxErrorDecryption.Ok)
+            {
+                return plain;
+            }
 
-            return output;
+            return null;
         }
 
-        public static byte[] DecryptData(byte[] data, string password)
+        public static bool IsDataEncrypted(byte[] data) => ToxEncryptionFunctions.IsDataEncrypted(data);
+
+        public static byte[] GetSalt(byte[] data, out ToxErrorGetSalt error)
         {
-            var error = ToxErrorDecryption.Ok;
-            return DecryptData(data, password, out error);
-        }
+            byte[] salt = new byte[ToxEncryptionConstants.SaltLength];
 
-        public static bool IsDataEncrypted(byte[] data)
-        {
-            return ToxEncryptionFunctions.IsDataEncrypted(data);
-        }
+            error = ToxErrorGetSalt.Ok;
+            var success = ToxEncryptionFunctions.GetSalt(data, salt, ref error);
+            if (success && error == ToxErrorGetSalt.Ok)
+            {
+                return salt;
+            }
 
-        public static byte[] GetSalt(byte[] data)
-        {
-            byte[] salt = new byte[SaltLength];
-
-            if (!ToxEncryptionFunctions.GetSalt(data, salt))
-                return null;
-
-            return salt;
-        }
-
-        internal static ToxPassKey? DeriveKey(string passphrase)
-        {
-            byte[] pp = Encoding.UTF8.GetBytes(passphrase);
-            var error = ToxErrorKeyDerivation.Ok;
-            var key = new ToxPassKey();
-
-            if (!ToxEncryptionFunctions.DeriveKeyFromPass(pp, (uint)pp.Length, ref key, ref error) || error != ToxErrorKeyDerivation.Ok)
-                return null;
-
-            return key;
-        }
-
-        internal static ToxPassKey? DeriveKey(string passphrase, byte[] salt)
-        {
-            if (salt.Length < SaltLength)
-                return null;
-
-            byte[] pp = Encoding.UTF8.GetBytes(passphrase);
-            var error = ToxErrorKeyDerivation.Ok;
-            var key = new ToxPassKey();
-
-            if (!ToxEncryptionFunctions.DeriveKeyWithSalt(pp, (uint)pp.Length, salt, ref key, ref error) || error != ToxErrorKeyDerivation.Ok)
-                return null;
-
-            return key;
+            return null;
         }
     }
 }

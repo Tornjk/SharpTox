@@ -24,4 +24,11 @@
         KeyDerivationFailed,
         Failed
     }
+
+    public enum ToxErrorGetSalt
+    {
+        Ok,
+        Null,
+        BadFormat
+    }
 }
