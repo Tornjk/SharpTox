@@ -3,212 +3,127 @@ using System.Runtime.InteropServices;
 
 namespace SharpTox.Core
 {
-    /// <summary>
-    /// Represents settings to be used by an instance of tox.
-    /// </summary>
-    public sealed class ToxOptions
+    public sealed class ToxOptions : IDisposable
     {
-        /// <summary>
-        /// Default Tox Options.
-        /// </summary>
-        public static ToxOptions Default { get { return new ToxOptions(ToxOptionsStruct.Default); } }
+        private readonly ToxOptionsHandle options;
 
-        /// <summary>
-        /// Whether or not IPv6 should be enabled.
-        /// </summary>
-        public bool Ipv6Enabled
+        public ToxOptions()
         {
-            get { return _options.Ipv6Enabled; }
-            set { _options.Ipv6Enabled = value; }
-        }
+            var err = ToxErrorOptionsNew.Ok;
+            this.options = ToxFunctions.Options.New(ref err);
 
-        /// <summary>
-        /// Whether or not UDP should be enabled.
-        /// </summary>
-        public bool UdpEnabled
-        {
-            get { return _options.UdpEnabled; }
-            set { _options.UdpEnabled = value; }
-        }
-
-        /// <summary>
-        /// Proxy type.
-        /// </summary>
-        public ToxProxyType ProxyType
-        {
-            get { return _options.ProxyType; }
-            set { _options.ProxyType = value; }
-        }
-
-        /// <summary>
-        /// Proxy ip or domain.
-        /// </summary>
-        public string ProxyHost
-        {
-            get { return _options.ProxyHost; }
-            set { _options.ProxyHost = value; }
-        }
-
-        /// <summary>
-        /// Proxy port, in host byte order.
-        /// Underlying type is ushort, don't exceed ushort.MaxValue.
-        /// </summary>
-        public int ProxyPort
-        {
-            get { return _options.ProxyPort; }
-            set { _options.ProxyPort = (ushort)value; }
-        }
-
-        /// <summary>
-        /// The start port of the inclusive port range to attempt to use.
-        /// Underlying type is ushort, don't exceed ushort.MaxValue.
-        /// </summary>
-        public int StartPort
-        {
-            get { return _options.StartPort; }
-            set { _options.StartPort = (ushort)value; }
-        }
-
-        /// <summary>
-        /// The end port of the inclusive port range to attempt to use.
-        /// Underlying type is ushort, don't exceed ushort.MaxValue.
-        /// </summary>
-        public int EndPort
-        {
-            get { return _options.EndPort; }
-            set { _options.EndPort = (ushort)value; }
-        }
-
-        /// <summary>
-        /// The port to use for a TCP server. This can be disabled by assigning 0.
-        /// Underlying type is ushort, don't exceed ushort.MaxValue.
-        /// </summary>
-        public int TcpPort
-        {
-            get { return _options.TcpPort; }
-            set { _options.TcpPort = (ushort)value; }
-        }
-
-        private ToxOptionsStruct _options;
-        internal ToxOptionsStruct Struct { get { return _options; } }
-
-        internal ToxOptions(ToxOptionsStruct options)
-        {
-            _options = options;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ToxOptions"/> struct.
-        /// </summary>
-        /// <param name="ipv6Enabled">Whether or not IPv6 should be enabled.</param>
-        /// <param name="udpEnabled">Whether or not UDP should be enabled.</param>
-        public ToxOptions(bool ipv6Enabled, bool udpEnabled)
-        {
-            _options = new ToxOptionsStruct();
-            _options.Ipv6Enabled = ipv6Enabled;
-            _options.UdpEnabled = udpEnabled;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ToxOptions"/> struct.
-        /// </summary>
-        /// <param name="ipv6Enabled">Whether or not IPv6 should be enabled.</param>
-        /// <param name="type">The type of proxy we want to connect to.</param>
-        /// <param name="proxyAddress">The IP address or DNS name of the proxy to be used.</param>
-        /// <param name="proxyPort">The port to use to connect to the proxy.</param>
-        public ToxOptions(bool ipv6Enabled, ToxProxyType type, string proxyAddress, int proxyPort)
-        {
-            if (string.IsNullOrEmpty(proxyAddress))
-                throw new ArgumentNullException("proxyAddress");
-
-            if (proxyAddress.Length > 255)
-                throw new Exception("Parameter proxyAddress is too long.");
-
-            _options = new ToxOptionsStruct();
-            _options.Ipv6Enabled = ipv6Enabled;
-            _options.UdpEnabled = false;
-            _options.ProxyType = type;
-            _options.ProxyHost = proxyAddress;
-            _options.ProxyPort = (ushort)proxyPort;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is ToxOptions other) {
-                return this.Struct.Equals(other.Struct);
-            }
-
-            return false;
-        }
-
-        public override int GetHashCode() => base.GetHashCode();
-
-        public static bool operator ==(ToxOptions options1, ToxOptions options2)
-        {
-            return options1.Struct.Equals(options2.Struct);
-        }
-
-        public static bool operator !=(ToxOptions options1, ToxOptions options2)
-        {
-            return !(options1 == options2);
-        }
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct ToxOptionsStruct
-    {
-        internal static ToxOptionsStruct Default
-        {
-            get
+            if (err != ToxErrorOptionsNew.Ok)
             {
-                ToxOptionsStruct options = new ToxOptionsStruct();
-                ToxFunctions.OptionsDefault(ref options);
-                return options;
+                throw new InvalidOperationException();
             }
         }
 
-        internal void SetData(byte[] data, ToxSaveDataType type)
-        {
-            if (type == ToxSaveDataType.SecretKey && data.Length != ToxConstants.SecretKeySize)
-                throw new ArgumentException("Data must have a length of ToxConstants.SecretKeySize bytes", "data");
-
-            SaveDataType = type;
-            SaveDataLength = (uint)data.Length;
-            SaveData = Marshal.AllocHGlobal(data.Length);
-
-            Marshal.Copy(data, 0, SaveData, data.Length);
+        public bool Ipv6Enabled {
+            get => ToxFunctions.Options.GetIpv6Enabled(this.options);
+            set => ToxFunctions.Options.SetIpv6Enabled(this.options, value);
         }
 
-        internal void Free()
-        {
-            if (SaveData != IntPtr.Zero)
-                Marshal.FreeHGlobal(SaveData);
+        public bool UdpEnabled {
+            get => ToxFunctions.Options.GetUdpEnabled(this.options);
+            set => ToxFunctions.Options.SetUdpEnabled(this.options, value);
         }
 
-        [MarshalAs(UnmanagedType.I1)]
-        internal bool Ipv6Enabled;
+        public bool LocalDiscoveryEnabled {
+            get => ToxFunctions.Options.GetLocalDiscoveryEnabled(this.options);
+            set => ToxFunctions.Options.SetLocalDiscoveryEnabled(this.options, value);
+        }
 
-        [MarshalAs(UnmanagedType.I1)]
-        internal bool UdpEnabled;
+        public ToxProxyType ProxyType {
+            get => ToxFunctions.Options.GetProxyType(this.options);
+            set => ToxFunctions.Options.SetProxyType(this.options, value);
+        }
 
-        [MarshalAs(UnmanagedType.I1)]
-        internal bool LocalDiscoveryEnabled;
+        public string ProxyHost {
+            get => ToxFunctions.Options.GetProxyHost(this.options);
+            set => ToxFunctions.Options.SetProxyHost(this.options, value);
+        }
 
-        internal ToxProxyType ProxyType;
+        public ushort ProxyPort {
+            get => ToxFunctions.Options.GetProxyPort(this.options);
+            set => ToxFunctions.Options.SetProxyPort(this.options, value);
+        }
 
-        [MarshalAs(UnmanagedType.LPStr)]
-        internal string ProxyHost;
+        public ushort StartPort {
+            get => ToxFunctions.Options.GetStartPort(this.options);
+            set => ToxFunctions.Options.SetStartPort(this.options, value);
+        }
 
-        internal ushort ProxyPort;
-        internal ushort StartPort;
-        internal ushort EndPort;
-        internal ushort TcpPort;
+        public ushort EndPort {
+            get => ToxFunctions.Options.GetEndPort(this.options);
+            set => ToxFunctions.Options.SetEndPort(this.options, value);
+        }
 
-        [MarshalAs(UnmanagedType.I1)]
-        internal bool HolePunchingEnabled;
+        public ushort TcpPort {
+            get => ToxFunctions.Options.GetTcpPort(this.options);
+            set => ToxFunctions.Options.SetTcpPort(this.options, value);
+        }
 
-        internal ToxSaveDataType SaveDataType;
-        internal IntPtr SaveData;
-        internal uint SaveDataLength;
+        public bool HolePunchingEnabled {
+            get => ToxFunctions.Options.GetHolePunchingEnabled(this.options);
+            set => ToxFunctions.Options.SetHolePunchingEnabled(this.options, value);
+        }
+
+        /// <summary>
+        /// Apply the default options to the ToxOptions and overrides the current values.
+        /// </summary>
+        public void ApplyDefault()
+            => ToxFunctions.Options.Default(this.options);
+
+        public static ToxOptions Default()
+        {
+            var options = new ToxOptions();
+            options.ApplyDefault();
+            return options;
+        }
+
+        internal ToxHandle Create()
+        {
+            var err = ToxErrorNew.Ok;
+            var tox = ToxFunctions.New(this.options, ref err);
+            if (tox == null || tox.IsInvalid || err != ToxErrorNew.Ok)
+            {
+                throw new Exception("Could not create a new instance of tox, error: " + err.ToString());
+            }
+
+            return tox;
+        }
+
+        internal ToxSavedataType SavedataType {
+            get => ToxFunctions.Options.GetSavedataType(this.options);
+        }
+
+        internal byte[] Savedata {
+            get {
+                var bytes = new byte[ToxFunctions.Options.GetSavedataLength(this.options)];
+                var ptr = ToxFunctions.Options.GetSavedataData(this.options);
+                Marshal.Copy(ptr, bytes, 0, bytes.Length);
+                return bytes;
+            }
+        }
+
+        internal void SetData(byte[] data, ToxSavedataType type)
+        {
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
+            if (type == ToxSavedataType.SecretKey && data.Length != ToxConstants.SecretKeySize)
+                throw new ArgumentException("Data must have a length of ToxConstants.SecretKeySize bytes", nameof(data));
+
+            ToxFunctions.Options.SetSavedataType(this.options, type);
+
+            var ptr = Marshal.AllocHGlobal(data.Length);
+            Marshal.Copy(data, 0, ptr, data.Length);
+            ToxFunctions.Options.SetSavedataData(this.options, ptr, (uint)data.Length);
+        }
+
+        public void Dispose()
+            => this.options.Dispose();
     }
 }

@@ -42,7 +42,7 @@ namespace SharpTox.Core
         {
             get
             {
-                byte[] nospam = new byte[sizeof(uint)];
+                byte[] nospam = new byte[ToxConstants.NospamSize];
                 Array.Copy(_id, ToxConstants.PublicKeySize, nospam, 0, sizeof(uint));
 
                 return BitConverter.ToInt32(nospam, 0);
@@ -76,12 +76,8 @@ namespace SharpTox.Core
         /// <param name="id">A byte array with a length of ToxConstant.AddressSize, containing a Tox ID.</param>
         public ToxId(byte[] id)
         {
-            if (id == null)
-                throw new ArgumentNullException("id");
-
-            _id = id;
-
-            if (CalcChecksum(_id, ToxConstants.PublicKeySize + sizeof(uint)) != unchecked((ushort)Checksum))
+            _id = id ?? throw new ArgumentNullException("id");
+            if (CalcChecksum(_id, ToxConstants.PublicKeySize + ToxConstants.NospamSize) != unchecked((ushort)Checksum))
                 throw new Exception("This Tox ID is invalid");
         }
 

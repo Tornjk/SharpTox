@@ -3,27 +3,31 @@ using System.Runtime.InteropServices;
 
 namespace SharpTox.Av
 {
-    internal class ToxAvDelegates
+    static class ToxAvDelegates
     {
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        internal delegate void CallCallback(IntPtr toxAv, uint friendNumber, bool audioEnabled, bool videoEnabled, IntPtr userData);
+        public delegate void CallDelegate(IntPtr toxAv, UInt32 friendNumber, Boolean audioEnabled, Boolean videoEnabled, IntPtr userData);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        internal delegate void CallStateCallback(IntPtr toxAv, uint friendNumber, ToxAvFriendCallState state, IntPtr userData);
+        public delegate void CallStateDelegate(IntPtr toxAv, UInt32 friendNumber, ToxAvFriendCallState state, IntPtr userData);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        internal delegate void FrameRequestCallback(IntPtr toxAv, uint friendNumber, IntPtr userData);
+        public delegate void AudioBitRateDelegate(IntPtr toxAv, UInt32 friendNumber, UInt32 bitrate, IntPtr userData);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        internal delegate void BitrateStatusCallback(IntPtr toxAv, uint friendNumber, uint audioBitrate, uint videoBitrate, IntPtr userData);
+        public delegate void VideoBitRateDelegate(IntPtr toxAv, UInt32 friendNumber, UInt32 bitrate, IntPtr userData);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        internal delegate void VideoReceiveFrameCallback(IntPtr toxAv, uint friendNumber, ushort width, ushort height, IntPtr y, IntPtr u, IntPtr v, int yStride, int uStride, int vStride, IntPtr userData);
+        // pcm: Array of audio samples (sampleCount * channels = length)
+        public delegate void AudioReceiveFrameDelegate(IntPtr toxAv, UInt32 friendNumber, IntPtr pcm, UInt32 sampleCount, Byte channels, UInt32 samplingRate, IntPtr userData);
+
+        // y: Luminosity plane. Size = MAX(width, abs(ystride)) * height.
+        // u: U chroma plane. Size = MAX(width/2, abs(ustride)) * (height/2).
+        // v: V chroma plane. Size = MAX(width/2, abs(vstride)) * (height/2).
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void VideoReceiveFrameDelegate(IntPtr toxAv, UInt32 friendNumber, UInt16 width, UInt16 height, IntPtr y, IntPtr u, IntPtr v, Int32 yStride, Int32 uStride, Int32 vStride, IntPtr userData);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        internal delegate void AudioReceiveFrameCallback(IntPtr toxAv, uint friendNumber, IntPtr pcm, uint sampleCount, byte channels, uint samplingRate, IntPtr userData);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        internal delegate void GroupAudioReceiveCallback(IntPtr tox, int groupNumber, int peerNumber, IntPtr frame, uint sampleCount, byte channels, uint sampleRate, IntPtr userData);
+        public delegate void GroupAudioReceiveDelegate(IntPtr tox, UInt32 groupNumber, UInt32 peerNumber, IntPtr frame, UInt32 sampleCount, Byte channels, UInt32 sampleRate, IntPtr userData);
     }
 }

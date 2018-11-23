@@ -5,14 +5,14 @@ namespace SharpTox.Core
     /// <summary>
     /// Represents a 32 byte long tox key (either public or secret).
     /// </summary>
-    public class ToxKey
+    public sealed class ToxKey
     {
-        private readonly byte[] _key;
+        private readonly byte[] key;
 
         /// <summary>
         /// The key type (either public or secret).
         /// </summary>
-        public ToxKeyType KeyType { get; private set; }
+        public ToxKeyType KeyType { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ToxKey"/> class
@@ -21,8 +21,8 @@ namespace SharpTox.Core
         /// <param name="key"></param>
         public ToxKey(ToxKeyType type, byte[] key)
         {
-            KeyType = type;
-            _key = key;
+            this.KeyType = type;
+            this.key = key;
         }
 
         /// <summary>
@@ -32,21 +32,21 @@ namespace SharpTox.Core
         /// <param name="key"></param>
         public ToxKey(ToxKeyType type, string key)
         {
-            KeyType = type;
-            _key = ToxTools.StringToHexBin(key);
+            this.KeyType = type;
+            this.key = ToxTools.StringToHexBin(key);
         }
 
         /// <summary>
         /// Retrieves a byte array of the tox key.
         /// </summary>
         /// <returns></returns>
-        public byte[] GetBytes() => (byte[])_key.Clone();
+        public byte[] GetBytes() => (byte[])key.Clone();
 
         /// <summary>
         /// Retrieves a string of the tox key.
         /// </summary>
         /// <returns></returns>
-        public string GetString() => ToxTools.HexBinToString(_key);
+        public string GetString() => ToxTools.HexBinToString(key);
 
         public static bool operator ==(ToxKey key1, ToxKey key2)
         {
@@ -56,7 +56,7 @@ namespace SharpTox.Core
             if ((object)key1 == null ^ (object)key2 == null)
                 return false;
 
-            return (key1._key.SequenceEqual(key2._key) && key1.KeyType == key2.KeyType);
+            return (key1.key.SequenceEqual(key2.key) && key1.KeyType == key2.KeyType);
         }
 
         public static bool operator !=(ToxKey key1, ToxKey key2)
@@ -78,6 +78,6 @@ namespace SharpTox.Core
 
         public override int GetHashCode() => base.GetHashCode();
 
-        public override string ToString() => ToxTools.HexBinToString(_key);
+        public override string ToString() => ToxTools.HexBinToString(key);
     }
 }

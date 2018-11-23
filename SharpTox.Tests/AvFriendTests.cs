@@ -1,37 +1,56 @@
-using System;
-using SharpTox.Core;
-using SharpTox.Av;
-using System.Threading;
 using NUnit.Framework;
+using SharpTox.Av;
+using SharpTox.Core;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpTox.Test
 {
     [TestFixture]
     public class AvFriendTests
     {
-        private Tox _tox1;
-        private Tox _tox2;
+        // todo: unittests must be standalone
+        private Tox tox1;
+        private Tox tox2;
         private ToxAv _toxAv1;
         private ToxAv _toxAv2;
 
         [OneTimeSetUp]
-        [MaxTime(10000)]
-        public void Init()
+        public async Task Init()
         {
-            var options = new ToxOptions(true, true);
-            _tox1 = new Tox(options);
-            _tox2 = new Tox(options);
+            var options = new ToxOptions { Ipv6Enabled = true, UdpEnabled = true };
+            tox1 = new Tox(options);
+            tox2 = new Tox(options);
 
-            _toxAv1 = new ToxAv(_tox1);
-            _toxAv2 = new ToxAv(_tox2);
+            _toxAv1 = new ToxAv(tox1);
+            _toxAv2 = new ToxAv(tox2);
 
-            _tox1.AddFriend(_tox2.Id, "hey");
-            _tox2.AddFriend(_tox1.Id, "hey");
+            var friend2 = tox1.AddFriend(tox2.Id, "hey", out _);
+            tox2.AddFriend(tox1.Id, "hey", out _);
 
-            while (_tox1.GetFriendConnectionStatus(0) == ToxConnectionStatus.None) { DoIterate(); }
+            var connected = new TaskCompletionSource<bool>();
+            tox1.OnFriendConnectionStatusChanged += (o, e) =>
+            {
+                if (e.FriendNumber == friend2)
+                {
+                    connected.SetResult(e.Status != ToxConnectionStatus.None);
+                }
+            };
 
-            bool answered = false;
-            _toxAv1.Call(0, 48, 3000);
+            var tsrc = new CancellationTokenSource();
+            var it = Task.Run(() =>
+            {
+                while (!tsrc.IsCancellationRequested)
+                {
+                    DoIterate();
+                }
+            });
+
+            await ToxTest.AssertTimeout(TimeSpan.FromSeconds(10), connected.Task);
+
+            var answered = new TaskCompletionSource<bool>();
+            _toxAv1.Call(0, 48, 3000, out _);
 
             _toxAv2.OnCallRequestReceived += (sender, e) =>
             {
@@ -41,10 +60,13 @@ namespace SharpTox.Test
 
             _toxAv1.OnCallStateChanged += (sender, e) =>
             {
-                answered = true;
+                answered.TrySetResult(true);
             };
 
-            while (!answered) { DoIterate(); }
+            Assert.True(await answered.Task);
+
+            tsrc.Cancel();
+            await it;
         }
 
         [OneTimeTearDown]
@@ -53,37 +75,40 @@ namespace SharpTox.Test
             _toxAv1.Dispose();
             _toxAv2.Dispose();
 
-            _tox1.Dispose();
-            _tox2.Dispose();
+            tox1.Dispose();
+            tox2.Dispose();
         }
 
         private void DoIterate()
         {
-            int time1 = Math.Min(_tox1.Iterate(), _tox2.Iterate());
-            int time2 = Math.Min(_toxAv1.Iterate(), _toxAv2.Iterate());
+            var time1 = Min(tox1.Iterate(), tox2.Iterate());
+            var time2 = Min(_toxAv1.Iterate(), _toxAv2.Iterate());
 
-            Thread.Sleep(Math.Min(time1, time2));
+            Thread.Sleep(Min(time1, time2));
+
+            TimeSpan Min(TimeSpan a, TimeSpan b)
+                => a < b ? a : b;
         }
 
         [Test]
         public void TestToxAvAudioBitrateChange()
         {
-            int bitrate = 16;
-            var error = ToxAvErrorSetBitrate.Ok;
+            uint bitrate = 16;
+            var error = ToxAvErrorBitRateSet.Ok;
             bool result = _toxAv1.SetAudioBitrate(0, bitrate, out error);
 
-            if (!result || error != ToxAvErrorSetBitrate.Ok)
+            if (!result || error != ToxAvErrorBitRateSet.Ok)
                 Assert.Fail("Failed to set audio bitrate, error: {0}, result: {1}", error, result);
         }
 
         [Test]
         public void TestToxAvVideoBitrateChange()
         {
-            int bitrate = 2000;
-            var error = ToxAvErrorSetBitrate.Ok;
+            uint bitrate = 2000;
+            var error = ToxAvErrorBitRateSet.Ok;
             bool result = _toxAv1.SetVideoBitrate(0, bitrate, out error);
 
-            if (!result || error != ToxAvErrorSetBitrate.Ok)
+            if (!result || error != ToxAvErrorBitRateSet.Ok)
                 Assert.Fail("Failed to set video bitrate, error: {0}, result: {1}", error, result);
         }
 
