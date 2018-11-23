@@ -3,7 +3,6 @@ using SharpTox.Core;
 using SharpTox.Encryption;
 using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpTox.Test

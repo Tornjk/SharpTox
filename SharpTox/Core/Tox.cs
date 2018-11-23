@@ -1324,7 +1324,7 @@ namespace SharpTox.Core
 
         private void ThrowIfDisposed()
         {
-            if (disposed)
+            if (this.disposed)
                 throw new ObjectDisposedException(GetType().FullName);
         }
     }

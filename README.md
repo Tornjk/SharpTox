@@ -3,7 +3,8 @@ SharpTox
 Unofficial
 --------
 
-This project aims to provide a simple library that wraps all of the functions found in the [Tox library](https://github.com/irungentoo/ProjectTox-Core "ProjectTox GitHub repo").
+This project aims to provide a simple library that wraps all of the functions found in the [Tox library](https://github.com/irungentoo/ProjectTox-Core "ProjectTox GitHub repo"). (Tox.h, ToxAv.h, ToxEncryption.h)
+
 Tox is a free (as in freedom) Skype replacement.
 
 Feel free to contribute!
@@ -14,7 +15,7 @@ I do not really maintain this version of SharpTox! I aim to have a base to play 
 
 Feel free to contribute but do not expect a working version!
 
-The current version I program against is 0.2.3 of toxcore.
+The current version I program against is **0.2.8** of toxcore.
 
 ### Things you'll need
 
@@ -22,7 +23,7 @@ The current version I program against is 0.2.3 of toxcore.
 
 Depending on how you compiled the core libraries, the names of those may differ from the 
 defaults in SharpTox. Be sure to change the value of the const string **DLL**
-in Extern.cs accordingly if needed.
+in Extern.cs accordingly if needed. I for example needed to change this for using SharpTox on a debian machine.
 
 ### Compiling and Testing
 If you've set up your project like mentioned above you can go ahead and compile SharpTox.
@@ -40,7 +41,7 @@ dotnet restore
 dotnet build
 ```
 
-#### Run the Tests
+#### Run the Tests (Windows)
 In order to run the Tests for SharpTox make sure the **libtox** library is in your
 SharpTox.Tests/bin/(Configuration) directory.
 Run from your commandline:
@@ -49,12 +50,27 @@ Run from your commandline:
 dotnet test
 ```
 
+#### Run the Tests (Linux)
+In order to run the Tests for SharpTox make sure the libtoxcore.so is installed on your os.
+Run from your commandline:
+
+```
+dotnet test
+```
+
+#### Troubleshoot Linux
+I myself only tested very little SharpTox on a debian 9 machine. If you're more sophisticated with debian and it's lib mechanism feel free to teach me.
+
+How I got it working:
+Build libsodium and toxcore on debian and reference it in **Extern.cs** in SharpTox.
+I did not test it with Av.
+
 ## Attention:
 This repository is currently mainly for my own programming uses.
 If anything comes up or this changes I will write it down somewhere.
 Also I'm developing on Windows. So I'm not certain everything is working on Unix/Mac.
 
-**Looking for precompiled binaries? [Check this](https://jenkins.impy.me/ "SharpTox Binaries").**
+***Looking for precompiled binaries? I do not provide them currently. Sorry!***
 
 ### Basic Usage
 ```csharp
@@ -63,29 +79,30 @@ using SharpTox.Core;
 
 class Program
 {
-    static Tox tox;
-
     static void Main(string[] args)
     {
-        ToxOptions options = new ToxOptions(true, true);
+        ToxOptions options = ToxOptions.Default();
 
-        tox = new Tox(options);
-        tox.OnFriendRequestReceived += tox_OnFriendRequestReceived;
-        tox.OnFriendMessageReceived += tox_OnFriendMessageReceived;
+        using(var tox = new Tox(options))
+        {
+            tox.OnFriendRequestReceived += tox_OnFriendRequestReceived;
+            tox.OnFriendMessageReceived += tox_OnFriendMessageReceived;
 
-        foreach (ToxNode node in Nodes)
-            tox.Bootstrap(node);
+            foreach (ToxNode node in Nodes)
+            {
+                tox.Bootstrap(node, out _);
+            }
 
-        tox.Name = "SharpTox";
-        tox.StatusMessage = "Testing SharpTox";
+            tox.Name = "SharpTox";
+            tox.StatusMessage = "Testing SharpTox";
 
-        tox.Start();
+            tox.Start();
 
-        string id = tox.Id.ToString();
-        Console.WriteLine("ID: {0}", id);
+            Console.WriteLine($"ID: {tox.Id}");
+            Console.ReadKey();
 
-        Console.ReadKey();
-        tox.Dispose();
+            tox.Stop();
+        }
     }
 
     //check https://wiki.tox.im/Nodes for an up-to-date list of nodes
