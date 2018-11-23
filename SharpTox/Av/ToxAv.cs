@@ -211,12 +211,12 @@ namespace SharpTox.Av
             return ToxAvFunctions.Answer(Handle, friendNumber, audioBitrate, videoBitrate, ref error);
         }
 
-        public bool SendControl(int friendNumber, ToxAvCallControl control, out ToxAvErrorCallControl error)
+        public bool SendControl(uint friendNumber, ToxAvCallControl control, out ToxAvErrorCallControl error)
         {
             ThrowIfDisposed();
 
             error = ToxAvErrorCallControl.Ok;
-            return ToxAvFunctions.CallControl(Handle, ToxTools.Map(friendNumber), control, ref error);
+            return ToxAvFunctions.CallControl(Handle, friendNumber, control, ref error);
         }
 
         public bool SetAudioBitrate(uint friendNumber, uint bitrate, out ToxAvErrorBitRateSet error)

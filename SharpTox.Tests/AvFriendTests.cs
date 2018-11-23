@@ -47,10 +47,7 @@ namespace SharpTox.Test
                 }
             });
 
-            await Task.WhenAny(Task.Delay(10000), connected.Task);
-
-            Assert.IsTrue(connected.Task.IsCompleted);
-            Assert.True(await connected.Task);
+            await ToxTest.AssertTimeout(TimeSpan.FromSeconds(10), connected.Task);
 
             var answered = new TaskCompletionSource<bool>();
             _toxAv1.Call(0, 48, 3000, out _);

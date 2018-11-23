@@ -14,17 +14,18 @@ namespace SharpTox.Test
         [Test]
         public void TestToxPortBind()
         {
-            using (var tox1 = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = false }))
-            using (var tox2 = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = true }))
+            using (var tox = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = false }))
             {
                 var error = ToxErrorGetPort.Ok;
-                var port = tox1.GetUdpPort(out error);
-                if (error != ToxErrorGetPort.NotBound)
-                    Assert.Fail("Tox bound to an udp port while it's not supposed to, port: {0}", port);
+                var port = tox.GetUdpPort(out error);
+                Assert.AreEqual(ToxErrorGetPort.NotBound, error, "Tox bound to an udp port while it's not supposed to, port: {0}", port);
+            }
 
-                port = tox2.GetUdpPort(out error);
-                if (error != ToxErrorGetPort.Ok)
-                    Assert.Fail("Failed to bind to an udp port");
+            using (var tox = new Tox(new ToxOptions { Ipv6Enabled = true, UdpEnabled = true }))
+            {
+                var error = ToxErrorGetPort.Ok;
+                var port = tox.GetUdpPort(out error);
+                Assert.AreEqual(ToxErrorGetPort.Ok, error, "Failed to bind to an udp port");
             }
         }
 
@@ -100,7 +101,7 @@ namespace SharpTox.Test
                 byte[] randomBytes = new byte[ToxConstants.NospamSize];
                 new Random().NextBytes(randomBytes);
 
-                int nospam = BitConverter.ToInt32(randomBytes, 0);
+                var nospam = BitConverter.ToUInt32(randomBytes, 0);
                 tox.SetNospam(nospam);
                 Assert.AreEqual(nospam, tox.GetNospam(), "Failed to set/get nospam correctly, values don't match");
             }
@@ -189,10 +190,9 @@ namespace SharpTox.Test
 
                 tox.Start();
 
-                await Task.WhenAny(Task.Delay(10000), connected.Task);
+                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(10), connected.Task);
 
-                Assert.True(connected.Task.IsCompleted, "Timeout");
-                Assert.True(await connected.Task);
+                tox.Stop();
             }
         }
 
@@ -229,10 +229,7 @@ namespace SharpTox.Test
                 tox1.Start();
                 tox2.Start();
 
-                await Task.WhenAny(Task.Delay(TimeSpan.FromMinutes(1)), completed.Task);
-
-                Assert.True(completed.Task.IsCompleted, "Timeout");
-                Assert.True(await completed.Task);
+                await ToxTest.AssertTimeout(TimeSpan.FromMinutes(1), completed.Task);
 
                 tox1.Stop();
                 tox2.Stop();
@@ -272,7 +269,7 @@ namespace SharpTox.Test
         {
             foreach (var node in Globals.Nodes)
             {
-                var success = tox.Bootstrap(node);
+                var success = tox.Bootstrap(node, out _);
                 if (!success)
                 {
                     throw new Exception("Bootstrap not successful");

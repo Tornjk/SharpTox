@@ -69,8 +69,8 @@ namespace SharpTox.Test
                 };
 
                 Assert.IsTrue(toxAv1.Call(friendToCall, 48, 30000, out _));
-                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(30), callrequest.Task);
-                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(30), answered.Task);
+                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(3), callrequest.Task);
+                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(3), answered.Task);
                 tokenSource.Cancel();
 
                 await it;
