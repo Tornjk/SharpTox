@@ -34,7 +34,7 @@ namespace SharpTox.Test
                     }
                 });
 
-                tox1.AddFriend(tox2.Id, "hey", out _);
+                var friendToCall = tox1.AddFriend(tox2.Id, "hey", out _);
                 tox2.AddFriend(tox1.Id, "hey", out _);
 
                 var tox1connected = new TaskCompletionSource<bool>();
@@ -43,9 +43,17 @@ namespace SharpTox.Test
                     tox1connected.TrySetResult(e.Status != ToxConnectionStatus.None);
                 };
 
-                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(20), tox1connected.Task);
+                var tox2connected = new TaskCompletionSource<bool>();
+                tox1.OnFriendConnectionStatusChanged += (o, e) =>
+                {
+                    if(e.FriendNumber == friendToCall)
+                    {
+                        tox2connected.TrySetResult(e.Status != ToxConnectionStatus.None);
+                    }
+                };
 
-                toxAv1.Call(0, 48, 30000, out _);
+                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(20), tox1connected.Task);
+                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(20), tox2connected.Task);
 
                 var callrequest = new TaskCompletionSource<bool>();
                 toxAv2.OnCallRequestReceived += (sender, e) =>
@@ -57,11 +65,12 @@ namespace SharpTox.Test
                 var answered = new TaskCompletionSource<bool>();
                 toxAv1.OnCallStateChanged += (sender, e) =>
                 {
-                    answered.TrySetResult(true);
+                    answered.TrySetResult(e.FriendNumber == friendToCall);
                 };
 
-                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(15), callrequest.Task);
-                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(10), answered.Task);
+                Assert.IsTrue(toxAv1.Call(friendToCall, 48, 30000, out _));
+                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(30), callrequest.Task);
+                await ToxTest.AssertTimeout(TimeSpan.FromSeconds(30), answered.Task);
                 tokenSource.Cancel();
 
                 await it;
