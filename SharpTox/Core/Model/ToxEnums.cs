@@ -968,7 +968,7 @@
         NotFound
     }
 
-    internal enum ToxSavedataType
+    public enum ToxSavedataType
     {
         None,
         ToxSave,

@@ -7,14 +7,14 @@ namespace SharpTox
 {
     static class ToxHelper
     {
-        public static TValue[] Get<TValue>(ToxHandle tox, Action<ToxHandle, TValue[]> fill, uint size)
+        public static TValue[] GetArray<TValue>(ToxHandle tox, Action<ToxHandle, TValue[]> fill, uint size)
         {
             var values = new TValue[size];
             fill(tox, values);
             return values;
         }
 
-        public static TValue[] Get<TValue>(ToxHandle tox, Func<ToxHandle, uint> size, Action<ToxHandle, TValue[]> fill)
+        public static TValue[] GetArray<TValue>(ToxHandle tox, Func<ToxHandle, uint> size, Action<ToxHandle, TValue[]> fill)
         {
             var values = new TValue[size(tox)];
             fill(tox, values);

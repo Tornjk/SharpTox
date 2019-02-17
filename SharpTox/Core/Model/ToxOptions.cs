@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using SharpTox.Core.Interfaces;
 
 namespace SharpTox.Core
 {
-    public sealed class ToxOptions : IDisposable
+    public sealed class ToxOptions : IDisposable, IToxOptions
     {
         private readonly ToxOptionsHandle options;
 
-        public ToxOptions()
+        public ToxOptions(IToxOptionsSavedata savedata = null)
         {
             var err = ToxErrorOptionsNew.Ok;
             this.options = ToxFunctions.Options.New(ref err);
@@ -16,6 +17,30 @@ namespace SharpTox.Core
             {
                 throw new InvalidOperationException();
             }
+
+            if (savedata != null)
+            {
+                this.SetSavedata(savedata.Data, savedata.Type);
+            }
+        }
+
+        public ToxOptions(IToxOptions other) : this(other?.GetSaveData())
+        {
+            if (other == null)
+            {
+                throw new ArgumentNullException(nameof(other));
+            }
+
+            this.Ipv6Enabled = other.Ipv6Enabled;
+            this.UdpEnabled = other.UdpEnabled;
+            this.LocalDiscoveryEnabled = other.LocalDiscoveryEnabled;
+            this.ProxyType = other.ProxyType;
+            this.ProxyHost = other.ProxyHost;
+            this.ProxyPort = other.ProxyPort;
+            this.StartPort = other.StartPort;
+            this.EndPort = other.EndPort;
+            this.TcpPort = other.TcpPort;
+            this.HolePunchingEnabled = other.HolePunchingEnabled;
         }
 
         public bool Ipv6Enabled {
@@ -81,6 +106,14 @@ namespace SharpTox.Core
             return options;
         }
 
+        public static ToxOptions Default(byte[] data, ToxSavedataType type)
+        {
+            var options = new ToxOptions();
+            options.ApplyDefault();
+            options.SetSavedata(data, type);
+            return options;
+        }
+
         internal ToxHandle Create()
         {
             var err = ToxErrorNew.Ok;
@@ -93,20 +126,7 @@ namespace SharpTox.Core
             return tox;
         }
 
-        internal ToxSavedataType SavedataType {
-            get => ToxFunctions.Options.GetSavedataType(this.options);
-        }
-
-        internal byte[] Savedata {
-            get {
-                var bytes = new byte[ToxFunctions.Options.GetSavedataLength(this.options)];
-                var ptr = ToxFunctions.Options.GetSavedataData(this.options);
-                Marshal.Copy(ptr, bytes, 0, bytes.Length);
-                return bytes;
-            }
-        }
-
-        internal void SetData(byte[] data, ToxSavedataType type)
+        private void SetSavedata(byte[] data, ToxSavedataType type)
         {
             if (data == null)
             {
@@ -123,7 +143,32 @@ namespace SharpTox.Core
             ToxFunctions.Options.SetSavedataData(this.options, ptr, (uint)data.Length);
         }
 
-        public void Dispose()
+        void IDisposable.Dispose()
             => this.options.Dispose();
+
+        public IToxOptionsSavedata GetSaveData()
+        {
+            var type = ToxFunctions.Options.GetSavedataType(this.options);
+            var data = new byte[ToxFunctions.Options.GetSavedataLength(this.options)];
+            {
+                var ptr = ToxFunctions.Options.GetSavedataData(this.options);
+                Marshal.Copy(ptr, data, 0, data.Length);
+            }
+
+            return new OptionsSavedata(type, data);
+        }
+
+        private class OptionsSavedata : IToxOptionsSavedata
+        {
+            public ToxSavedataType Type { get; }
+
+            public byte[] Data { get; }
+
+            public OptionsSavedata(ToxSavedataType type, byte[] savedata)
+            {
+                this.Type = type;
+                this.Data = savedata;
+            }
+        }
     }
 }

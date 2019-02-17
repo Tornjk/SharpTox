@@ -89,7 +89,9 @@ namespace SharpTox.Core
         public ToxId(byte[] publicKey, int nospam)
         {
             if (publicKey == null)
+            {
                 throw new ArgumentNullException("publicKey");
+            }
 
             byte[] id = new byte[ToxConstants.AddressSize];
 
@@ -109,6 +111,14 @@ namespace SharpTox.Core
         /// <param name="nospam">Nospam value to create this Tox ID with.</param>
         public ToxId(string publicKey, int nospam)
             : this(ToxTools.StringToHexBin(publicKey), nospam) { }
+
+        public static ToxId FromHandle(ToxHandle handle)
+        {
+            byte[] address = new byte[ToxConstants.AddressSize];
+            ToxFunctions.Self.GetAddress(handle, address);
+
+            return new ToxId(address);
+        }
 
         public static bool operator ==(ToxId id1, ToxId id2)
         {
@@ -139,14 +149,10 @@ namespace SharpTox.Core
         }
 
         public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
+            => base.GetHashCode();
 
         public override string ToString()
-        {
-            return ToxTools.HexBinToString(_id);
-        }
+            => ToxTools.HexBinToString(_id);
 
         /// <summary>
         /// Checks whether or not the given Tox ID is valid.

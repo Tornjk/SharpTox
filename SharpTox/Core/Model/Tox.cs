@@ -1,3 +1,4 @@
+using SharpTox.Core.Interfaces;
 using SharpTox.Encryption;
 using System;
 using System.Text;
@@ -17,81 +18,67 @@ namespace SharpTox.Core
         private bool disposed = false;
 
         /// <summary>
-        /// Options that are used for this instance of Tox.
-        /// </summary>
-        public ToxOptions Options { get; }
-
-        /// <summary>
         /// An array of friendnumbers of this Tox instance.
         /// </summary>
-        public uint[] Friends => ToxHelper.Get<uint>(this.Handle, ToxFunctions.Friend.GetFriendListSize, ToxFunctions.Friend.GetFriendList);
+        public uint[] Friends => ToxHelper.GetArray<uint>(this.Handle, ToxFunctions.Friend.GetFriendListSize, ToxFunctions.Friend.GetFriendList);
 
         /// <summary>
         /// The nickname of this Tox instance.
         /// </summary>
         public string Name {
-            get {
-                ThrowIfDisposed();
-                return ToxHelper.GetString(this.Handle, ToxFunctions.Self.GetNameSize, ToxFunctions.Self.GetName);
-            }
-
-            set {
-                ThrowIfDisposed();
+            get => this.DisposedCheck(handle => ToxHelper.GetString(handle, ToxFunctions.Self.GetNameSize, ToxFunctions.Self.GetName));
+            set => this.DisposedCheck(handle =>
+            {
                 byte[] bytes = ToxConstants.Encoding.GetBytes(value);
                 var error = ToxErrorSetInfo.Ok;
-                ToxFunctions.Self.SetName(this.Handle, bytes, (uint)bytes.Length, ref error);
-            }
+                var success = ToxFunctions.Self.SetName(handle, bytes, (uint)bytes.Length, ref error);
+
+                if (!success)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                if (error == ToxErrorSetInfo.TooLong)
+                {
+                    throw new ArgumentException(nameof(value));
+                }
+            });
         }
 
         /// <summary>
         /// The status message of this Tox instance.
         /// </summary>
         public string StatusMessage {
-            get {
-                ThrowIfDisposed();
-                return ToxHelper.GetString(this.Handle, ToxFunctions.Self.GetStatusMessageSize, ToxFunctions.Self.GetStatusMessage);
-            }
-            set {
-                ThrowIfDisposed();
-
-                byte[] msg = ToxConstants.Encoding.GetBytes(value);
+            get => this.DisposedCheck(handle => ToxHelper.GetString(handle, ToxFunctions.Self.GetStatusMessageSize, ToxFunctions.Self.GetStatusMessage));
+            set => this.DisposedCheck(handle =>
+            {
+                byte[] bytes = ToxConstants.Encoding.GetBytes(value);
                 var error = ToxErrorSetInfo.Ok;
-                ToxFunctions.Self.SetStatusMessage(Handle, msg, (uint)msg.Length, ref error);
-            }
+                ToxFunctions.Self.SetStatusMessage(handle, bytes, (uint)bytes.Length, ref error);
+
+                if (error == ToxErrorSetInfo.TooLong)
+                {
+                    throw new ArgumentException(nameof(value));
+                }
+            });
         }
 
         /// <summary>
         /// The Tox ID of this Tox instance.
         /// </summary>
-        public ToxId Id {
-            get {
-                ThrowIfDisposed();
-
-                byte[] address = new byte[ToxConstants.AddressSize];
-                ToxFunctions.Self.GetAddress(Handle, address);
-
-                return new ToxId(address);
-            }
-        }
+        public ToxId Id => this.DisposedCheck(tox => ToxId.FromHandle(tox));
 
         /// <summary>
         /// Retrieves the temporary DHT public key of this Tox instance.
         /// </summary>
-        public ToxKey DhtId => new ToxKey(ToxKeyType.Public, ToxHelper.Get<byte>(this.Handle, ToxFunctions.Self.GetDhtId, ToxConstants.PublicKeySize));
+        public ToxKey DhtId => this.DisposedCheck(tox => new ToxKey(ToxKeyType.Public, ToxHelper.GetArray<byte>(tox, ToxFunctions.Self.GetDhtId, ToxConstants.PublicKeySize)));
 
         /// <summary>
         /// Current user status of this Tox instance.
         /// </summary>
         public ToxUserStatus Status {
-            get {
-                ThrowIfDisposed();
-                return ToxFunctions.Self.GetStatus(Handle);
-            }
-
-            set {
-                ThrowIfDisposed();
-                ToxFunctions.Self.SetStatus(Handle, value);
-            }
+            get => this.DisposedCheck(tox => ToxFunctions.Self.GetStatus(tox));
+            set => this.DisposedCheck(tox => ToxFunctions.Self.SetStatus(tox, value));
         }
 
         /// <summary>
@@ -100,111 +87,29 @@ namespace SharpTox.Core
         /// </summary>
         internal ToxHandle Handle { get; }
 
+        // THIS IS THE ONE AND ONLY CTOR
+        public Tox(ToxHandle handle)
+        {
+            if (handle == null)
+            {
+                throw new ArgumentNullException(nameof(handle));
+            }
+
+            if (handle.IsInvalid || handle.IsClosed)
+            {
+                throw new ArgumentException(nameof(handle));
+            }
+
+            this.Handle = handle;
+        }
+
         /// <summary>
         /// Initializes a new instance of Tox. If no secret key is specified, toxcore will generate a new keypair.
         /// </summary>
         /// <param name="options">The options to initialize this instance of Tox with.</param>
         /// <param name="secretKey">Optionally, specify the secret key to initialize this instance of Tox with. Must be ToxConstants.SecretKeySize bytes in size.</param>
-        public Tox(ToxOptions options, ToxKey secretKey = null)
+        public Tox(ToxOptions options) : this(options.Create())
         {
-            if (secretKey != null)
-                options.SetData(secretKey.GetBytes(), ToxSavedataType.SecretKey);
-
-            Handle = options.Create();
-
-            if (Handle == null || Handle.IsInvalid)
-                throw new Exception("Could not create a new instance of tox, error: ");
-
-            Options = options;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of Tox.
-        /// </summary>
-        /// <param name="options">The options to initialize this instance of Tox with.</param>
-        /// <param name="data">A byte array containing Tox save data.</param>
-        public Tox(ToxOptions options, ToxData data)
-        {
-            Options = options ?? throw new ArgumentNullException(nameof(options));
-
-            if (data == null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
-
-            options.SetData(data.Bytes, ToxSavedataType.ToxSave);
-            Handle = options.Create();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of Tox.
-        /// </summary>
-        /// <param name="options">The options to initialize this instance of Tox with.</param>
-        /// <param name="data">A byte array containing Tox save data.</param>
-        /// <param name="key">The key to decrypt the given encrypted Tox profile data.</param>
-        public Tox(ToxOptions options, ToxData data, ToxEncryptionKey key)
-        {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
-
-            if (data == null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
-
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
-
-            if (!data.IsEncrypted)
-            {
-                throw new ArgumentException("data is not encrypted");
-            }
-
-            var decryptError = ToxErrorDecryption.Ok;
-            byte[] decryptedData = key.Decrypt(data.Bytes, out decryptError);
-            if (decryptedData == null || decryptError != ToxErrorDecryption.Ok)
-            {
-                throw new ArgumentException($"Failed to decrypt with the given key, error: {decryptError}");
-            }
-
-            options.SetData(decryptedData, ToxSavedataType.ToxSave);
-            this.Handle = options.Create();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of Tox.
-        /// </summary>
-        /// <param name="options">The options to initialize this instance of Tox with.</param>
-        /// <param name="data">A byte array containing Tox save data.</param>
-        /// <param name="password">The password to decrypt the given encrypted Tox profile data.</param>
-        public Tox(ToxOptions options, ToxData data, string password)
-        {
-            this.Options = options ?? throw new ArgumentNullException(nameof(options));
-
-            if (data == null)
-                throw new ArgumentNullException("data");
-
-            if (password == null)
-                throw new ArgumentNullException("password");
-
-            if (!data.IsEncrypted)
-                throw new Exception("This data is not encrypted");
-
-            var decryptError = ToxErrorDecryption.Ok;
-
-            byte[] decryptedData = ToxEncryption.Decrypt(data.Bytes, password, out decryptError);
-
-            if (decryptError != ToxErrorDecryption.Ok)
-            {
-                throw new ArgumentException($"Failed to decrypt with the given key, error: {decryptError}");
-            }
-
-            options.SetData(decryptedData, ToxSavedataType.ToxSave);
-            Handle = options.Create();
         }
 
         /// <summary>
@@ -1321,6 +1226,18 @@ namespace SharpTox.Core
             remove => this.conferencePeerList.Remove(this, value);
         }
         #endregion
+
+        private T DisposedCheck<T>(Func<ToxHandle, T> cb)
+        {
+            this.ThrowIfDisposed();
+            return cb(this.Handle);
+        }
+
+        private void DisposedCheck(Action<ToxHandle> cb)
+        {
+            this.ThrowIfDisposed();
+            cb(this.Handle);
+        }
 
         private void ThrowIfDisposed()
         {
