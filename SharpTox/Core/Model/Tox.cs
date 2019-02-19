@@ -241,7 +241,7 @@ namespace SharpTox.Core
             ThrowIfDisposed();
             byte[] msg = ToxConstants.Encoding.GetBytes(message);
             error = ToxErrorFriendAdd.Ok;
-            return ToxFunctions.Friend.Add(Handle, id.Bytes, msg, (uint)msg.Length, ref error);
+            return ToxFunctions.Friend.Add(Handle, id.GetBytes(), msg, (uint)msg.Length, ref error);
         }
 
         /// <summary>

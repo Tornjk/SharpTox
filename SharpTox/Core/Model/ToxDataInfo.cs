@@ -66,10 +66,10 @@ namespace SharpTox.Core
                         {
                             case StateType.NospamKeys:
                                 int nospam = reader.ReadInt32();
-                                byte[] publicKey = reader.ReadBytes(ToxConstants.PublicKeySize);
+                                byte[] keyBytes = reader.ReadBytes(ToxConstants.PublicKeySize);
 
                                 secretKey = reader.ReadBytes(ToxConstants.SecretKeySize);
-                                id = new ToxId(publicKey, nospam);
+                                id = new ToxId(new ToxKey(ToxKeyType.Public, keyBytes), nospam);
                                 break;
                             case StateType.Name:
                                 name = Encoding.UTF8.GetString(reader.ReadBytes((int)length), 0, (int)length);

@@ -1,10 +1,9 @@
 ﻿using System;
 using NUnit.Framework;
-using SharpTox.Core;
 
-namespace SharpTox.Tests
+namespace SharpTox.Core.UnitTests
 {
-    [TestFixture]
+    [TestFixture(TestOf = typeof(ToxKey))]
     public class ToxKey_Test
     {
         [Test]

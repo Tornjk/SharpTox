@@ -3,9 +3,9 @@ using System.Collections;
 using NUnit.Framework;
 using SharpTox.Core;
 
-namespace SharpTox.Tests
+namespace SharpTox.Core.UnitTests
 {
-    [TestFixture]
+    [TestFixture(TestOf =typeof(ToxTools))]
     public class ToxTools_Test
     {
         [TestCaseSource(nameof(StringToBinaryCases))]
