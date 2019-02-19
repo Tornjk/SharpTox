@@ -6,4 +6,11 @@
     <AssemblyTitle>SharpTox</AssemblyTitle>
     <AssemblyName>SharpTox</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Fody" Version="4.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="NullGuard.Fody" Version="1.8.7" />
+  </ItemGroup>
 </Project>
