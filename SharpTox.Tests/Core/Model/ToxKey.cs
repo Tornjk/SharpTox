@@ -19,6 +19,17 @@ namespace SharpTox.Tests
             Assert.Throws<ArgumentException>(() => new ToxKey(ToxKeyType.Secret, new byte[ToxConstants.SecretKeySize + 1]));
         }
 
+        [Test]
+        public void Constructor_NullBytes_ArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => new ToxKey(ToxKeyType.Public, (byte[])null));
+        }
+        [Test]
+        public void Constructor_NullString_ArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => new ToxKey(ToxKeyType.Public, (string)null));
+        }
+
         [TestCase(ToxKeyType.Public, ToxConstants.PublicKeySize)]
         [TestCase(ToxKeyType.Secret, ToxConstants.SecretKeySize)]
         public void GetBytes_InputByteArray_AreNotSame(ToxKeyType keyType, int keySize)
@@ -32,13 +43,12 @@ namespace SharpTox.Tests
 
         [TestCase(ToxKeyType.Public, ToxConstants.PublicKeySize)]
         [TestCase(ToxKeyType.Secret, ToxConstants.SecretKeySize)]
-        public void Equal_SameByteArray_IsTrue(ToxKeyType keyType, int keySize)
+        public void Keys_SameByteArray_AreEqual(ToxKeyType keyType, int keySize)
         {
             var key = new byte[keySize];
             var key1 = new ToxKey(keyType, key);
             var key2 = new ToxKey(keyType, key);
-            var equal = key1 == key2;
-            Assert.IsTrue(equal);
+            Assert.AreEqual(key1, key2);
         }
 
         [Test]

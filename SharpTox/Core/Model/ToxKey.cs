@@ -20,7 +20,7 @@ namespace SharpTox.Core
         /// </summary>
         /// <param name="type"></param>
         /// <param name="key"></param>
-        public ToxKey(ToxKeyType type, byte[] key)
+        public ToxKey(ToxKeyType type, [NotNull] byte[] key)
         {
             if(key.Length != KeySize(type))
             {
@@ -36,7 +36,7 @@ namespace SharpTox.Core
         /// </summary>
         /// <param name="type"></param>
         /// <param name="key"></param>
-        public ToxKey(ToxKeyType type, string key) : this(type, ToxTools.StringToHexBin(key))
+        public ToxKey(ToxKeyType type, [NotNull] string key) : this(type, ToxTools.StringToHexBin(key))
         {
         }
 
