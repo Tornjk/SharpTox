@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 
 namespace SharpTox.Core
@@ -8,22 +9,17 @@ namespace SharpTox.Core
     /// </summary>
     public static class ToxTools
     {
-        public static string HexBinToString(byte[] b)
+        public static string HexBinToString(byte[] bytes)
+            => string.Join("", bytes.Select(x => x.ToString("X2")));
+
+        public static byte[] StringToHexBin(string hexString)
         {
-            var sb = new StringBuilder(2 * b.Length);
-
-            for (int i = 0; i < b.Length; i++)
-                sb.AppendFormat("{0:X2}", b[i]);
-
-            return sb.ToString();
-        }
-
-        public static byte[] StringToHexBin(string s)
-        {
-            byte[] bin = new byte[s.Length / 2];
+            byte[] bin = new byte[hexString.Length / 2];
 
             for (int i = 0; i < bin.Length; i++)
-                bin[i] = Convert.ToByte(s.Substring(i * 2, 2), 16);
+            {
+                bin[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);
+            }
 
             return bin;
         }
