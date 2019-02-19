@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace SharpTox.Core
 {
@@ -21,8 +22,13 @@ namespace SharpTox.Core
         /// <param name="key"></param>
         public ToxKey(ToxKeyType type, byte[] key)
         {
+            if(key.Length != KeySize(type))
+            {
+                throw new ArgumentException(nameof(key));
+            }
+
             this.KeyType = type;
-            this.key = key;
+            this.key = (byte[])key.Clone();
         }
 
         /// <summary>
@@ -30,10 +36,8 @@ namespace SharpTox.Core
         /// </summary>
         /// <param name="type"></param>
         /// <param name="key"></param>
-        public ToxKey(ToxKeyType type, string key)
+        public ToxKey(ToxKeyType type, string key) : this(type, ToxTools.StringToHexBin(key))
         {
-            this.KeyType = type;
-            this.key = ToxTools.StringToHexBin(key);
         }
 
         /// <summary>
@@ -51,10 +55,14 @@ namespace SharpTox.Core
         public static bool operator ==(ToxKey key1, ToxKey key2)
         {
             if (object.ReferenceEquals(key1, key2))
+            {
                 return true;
+            }
 
             if ((object)key1 == null ^ (object)key2 == null)
+            {
                 return false;
+            }
 
             return (key1.key.SequenceEqual(key2.key) && key1.KeyType == key2.KeyType);
         }
@@ -79,5 +87,18 @@ namespace SharpTox.Core
         public override int GetHashCode() => base.GetHashCode();
 
         public override string ToString() => ToxTools.HexBinToString(key);
+
+        private static int KeySize(ToxKeyType type)
+        {
+            switch (type)
+            {
+                case ToxKeyType.Public:
+                    return ToxConstants.PublicKeySize;
+                case ToxKeyType.Secret:
+                    return ToxConstants.SecretKeySize;
+            }
+
+            throw new NotImplementedException();
+        }
     }
 }

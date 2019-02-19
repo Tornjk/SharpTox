@@ -40,5 +40,17 @@ namespace SharpTox.Tests
             var equal = key1 == key2;
             Assert.IsTrue(equal);
         }
+
+        [Test]
+        public void Equals_DifferentByteArrays_IsFalse()
+        {
+            var bytes = new byte[ToxConstants.PublicKeySize];
+            var key1 = new ToxKey(ToxKeyType.Public, bytes);
+
+            bytes[0] = 100;
+            var key2 = new ToxKey(ToxKeyType.Public, bytes);
+            var equal = key1 == key2;
+            Assert.IsFalse(equal);
+        }
     }
 }
