@@ -1,23 +1,21 @@
-﻿namespace SharpTox.Core
+﻿using SharpTox.Core.Interfaces;
+
+namespace SharpTox.Core
 {
     /// <summary>
     /// Represent information about a file transfer.
     /// </summary>
-    public sealed class ToxFileInfo
+    sealed class ToxFileInfo : IToxFileInfo
     {
         private readonly byte[] id;
 
-        /// <summary>
-        /// The number of this file transfer.
-        /// </summary>
+        /// <inheritdoc/>
         public uint Number { get; }
 
-        /// <summary>
-        /// The unique ID if this file transfer. This can be used to resume file transfer across restarts.
-        /// </summary>
+        /// <inheritdoc/>
         public byte[] Id => (byte[])id.Clone();
 
-        internal ToxFileInfo(uint number, byte[] id)
+        public ToxFileInfo(uint number, byte[] id)
         {
             this.Number = number;
             this.id = id;

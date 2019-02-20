@@ -585,7 +585,7 @@ namespace SharpTox.Core
         /// <param name="fileName">The filename of the file that will be transferred.</param>
         /// <param name="error"></param>
         /// <returns>Info about the file transfer on success.</returns>
-        public ToxFileInfo FileSend(uint friendNumber, ToxFileKind kind, long fileSize, string fileName, out ToxErrorFileSend error)
+        public IToxFileInfo FileSend(uint friendNumber, ToxFileKind kind, long fileSize, string fileName, out ToxErrorFileSend error)
         {
             ThrowIfDisposed();
 
@@ -611,7 +611,7 @@ namespace SharpTox.Core
         /// <param name="fileId">The id to identify this transfer with. Should be ToxConstants.FileIdLength bytes long.</param>
         /// <param name="error"></param>
         /// <returns>Info about the file transfer on success.</returns>
-        public ToxFileInfo FileSend(uint friendNumber, ToxFileKind kind, long fileSize, string fileName, byte[] fileId, out ToxErrorFileSend error)
+        public IToxFileInfo FileSend(uint friendNumber, ToxFileKind kind, long fileSize, string fileName, byte[] fileId, out ToxErrorFileSend error)
         {
             ThrowIfDisposed();
 
