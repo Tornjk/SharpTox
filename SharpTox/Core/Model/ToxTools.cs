@@ -9,8 +9,25 @@ namespace SharpTox.Core
     /// </summary>
     public static class ToxTools
     {
+        private readonly static char[] HexChars = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
         public static string HexBinToString(byte[] bytes)
             => string.Join("", bytes.Select(x => x.ToString("X2")));
+
+        public static bool ValidHexString(string hexString)
+        {
+            if (string.IsNullOrEmpty(hexString))
+            {
+                return false;
+            }
+
+            if(hexString.Length % 2 != 0)
+            {
+                return false;
+            }
+
+            return hexString.All(HexChars.Contains);
+        }
 
         public static byte[] StringToHexBin(string hexString)
         {

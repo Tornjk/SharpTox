@@ -42,5 +42,28 @@ namespace SharpTox.Core.UnitTests
                 yield return new TestCaseData("FC8422", new byte[] { 0xFC, 0x84, 0x22 });
             }
         }
+
+        [TestCase("FFFFFF")]
+        [TestCase("FACB12")]
+        [TestCase("123456")]
+        [TestCase("0102")]
+        [TestCase("00")]
+        public void ValidHexString_Input_IsTrue(string hexString)
+        {
+            var result = ToxTools.ValidHexString(hexString);
+            Assert.IsTrue(result);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("F")]
+        [TestCase("GFF8")]
+        [TestCase("     ")]
+        [TestCase("FFFFFFFFFFFFFFFFFFFFF")]
+        public void ValidHexString_Input_IsFalse(string hexString)
+        {
+            var result = ToxTools.ValidHexString(hexString);
+            Assert.IsFalse(result);
+        }
     }
 }

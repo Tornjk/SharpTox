@@ -66,7 +66,13 @@ namespace SharpTox.Core
         /// <summary>
         /// The Tox ID of this Tox instance.
         /// </summary>
-        public ToxId Id => this.DisposedCheck(tox => ToxId.FromHandle(tox));
+        public ToxId Id => this.DisposedCheck(handle =>
+        {
+            byte[] address = new byte[ToxConstants.AddressSize];
+            ToxFunctions.Self.GetAddress(handle, address);
+
+            return new ToxId(address);
+        });
 
         /// <summary>
         /// Retrieves the temporary DHT public key of this Tox instance.

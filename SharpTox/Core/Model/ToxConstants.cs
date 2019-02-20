@@ -29,9 +29,14 @@ namespace SharpTox.Core
         public const int NospamSize = sizeof(UInt32);
 
         /// <summary>
+        /// The size of the checksum in a Tox Address
+        /// </summary>
+        public const int ChecksumSize = sizeof(UInt16);
+
+        /// <summary>
         /// The size of an address.
         /// </summary>
-        public const int AddressSize = PublicKeySize + NospamSize + sizeof(UInt16);
+        public const int AddressSize = PublicKeySize + NospamSize + ChecksumSize;
 
         /// <summary>
         /// The maximum message length in bytes.

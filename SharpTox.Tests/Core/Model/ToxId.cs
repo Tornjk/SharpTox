@@ -33,7 +33,7 @@ namespace SharpTox.Core.UnitTests
         }
 
         [Test, AutoData]
-        public void Constructor_NullPublicKey_ArgumentNullException(int nospam)
+        public void Constructor_NullPublicKey_ArgumentNullException(uint nospam)
         {
             Assert.Throws<ArgumentNullException>(() => new ToxId(null, nospam));
         }
@@ -70,6 +70,34 @@ namespace SharpTox.Core.UnitTests
             var id = new ToxId(this.validTestId);
             var result = id.GetBytes();
             Assert.AreEqual(this.validTestId, result);
+        }
+
+        [Test]
+        public void IsValid_ValidId_IsTrue()
+        {
+            var result = ToxId.IsValid(this.validTestId);
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public void IsValid_InvalidId_IsFalse()
+        {
+            var result = ToxId.IsValid(this.invalidTestId);
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void IsValid_ValidIdString_IsTrue()
+        {
+            var result = ToxId.IsValid(ToxTools.HexBinToString(this.validTestId));
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public void IsValid_InvalidIdString_IsFalse()
+        {
+            var result = ToxId.IsValid(ToxTools.HexBinToString(this.invalidTestId));
+            Assert.IsFalse(result);
         }
     }
 }
