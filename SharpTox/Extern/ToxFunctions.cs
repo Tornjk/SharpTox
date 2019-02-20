@@ -499,10 +499,10 @@ namespace SharpTox.Core
 
         protected TDelegate tDelegate;
 
-        protected BaseToxCallbackHandler(Action<THandle, TDelegate> register, Func<Action<TEventArgs>, TDelegate> create)
+        protected BaseToxCallbackHandler([NotNull] Action<THandle, TDelegate> register, [NotNull] Func<Action<TEventArgs>, TDelegate> create)
         {
-            this.register = register ?? throw new ArgumentNullException(nameof(register));
-            this.create = create ?? throw new ArgumentNullException(nameof(create));
+            this.register = register;
+            this.create = create;
         }
     }
 

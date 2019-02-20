@@ -532,7 +532,7 @@ namespace SharpTox.Core
         /// </summary>
         /// <param name="error"></param>
         /// <returns>The TCP port on success.</returns>
-        public int GetTcpPort(out ToxErrorGetPort error)
+        public ushort GetTcpPort(out ToxErrorGetPort error)
         {
             ThrowIfDisposed();
 
@@ -814,8 +814,8 @@ namespace SharpTox.Core
             return ToxFunctions.Conference.Invite(this.Handle, friendNumber, conferenceNumber, ref error);
         }
 
-        public static bool ValidMessage(string message)
-            => ToxConstants.Encoding.GetByteCount(message ?? throw new ArgumentNullException(nameof(message))) < ToxFunctions.Max.MessageLength();
+        public bool ValidMessage([NotNull] string message)
+            => ToxConstants.Encoding.GetByteCount(message) < ToxFunctions.Max.MessageLength();
 
         /// <summary>
         /// Sends a message to a Conference.
@@ -826,7 +826,7 @@ namespace SharpTox.Core
         public bool SendConferenceMessage(uint conferenceNumber, ToxMessageType type, string message, out ToxErrorConferenceSendMessage error)
         {
             ThrowIfDisposed();
-            if (!ValidMessage(message))
+            if (!this.ValidMessage(message))
             {
                 throw new ArgumentException(nameof(message));
             }
