@@ -1,4 +1,5 @@
-﻿using SharpTox.Encryption;
+﻿using SharpTox.Core.Interfaces;
+using SharpTox.Encryption;
 using System;
 using System.IO;
 using System.Linq;
@@ -6,40 +7,21 @@ using System.Text;
 
 namespace SharpTox.Core
 {
-    /// <summary>
-    /// Represents Tox data (unencrypted or encrypted).
-    /// </summary>
-    public class ToxData
+    /// <inheritdoc/>
+    class ToxData : IToxData
     {
-        private bool _encrypted;
-        private byte[] _data;
+        private readonly byte[] bytes;
 
-        /// <summary>
-        /// Whether or not this data is encrypted.
-        /// </summary>
-        public bool IsEncrypted
-        {
-            get
-            {
-                return _encrypted;
-            }
-        }
+        /// <inheritdoc/>
+        public bool IsEncrypted { get; }
 
-        /// <summary>
-        /// The Tox data in a byte array.
-        /// </summary>
-        public byte[] Bytes
-        {
-            get
-            {
-                return _data;
-            }
-        }
+        /// <inheritdoc/>
+        public byte[] Bytes => (byte[])this.bytes.Clone();
 
-        private ToxData(byte[] data)
+        public ToxData([NotNull] byte[] data)
         {
-            _data = data;
-            _encrypted = ToxEncryptionFunctions.IsDataEncrypted(data);
+            this.bytes = data;
+            this.IsEncrypted = ToxEncryptionFunctions.IsDataEncrypted(data);
         }
 
         /// <summary>
@@ -53,65 +35,45 @@ namespace SharpTox.Core
             return info != null;
         }
 
-#if !IS_PORTABLE
         /// <summary>
-        /// Saves this Tox data to the disk with the specified filename.
+        /// Saves this Tox data to a stream.
         /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        public bool Save(string filename)
+        public bool SaveToStream([NotNull] Stream stream)
         {
             try
             {
-                if (_data.Length == 0)
-                    return false;
-
-                using (FileStream stream = new FileStream(filename, FileMode.Create))
+                using (var ms = new MemoryStream(this.bytes))
                 {
-                    stream.Write(_data, 0, _data.Length);
+                    ms.CopyTo(stream);
                 }
 
                 return true;
             }
-            catch { return false; }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>
-        /// Loads Tox data from disk and creates a new instance of ToxData.
+        /// Loads Tox data from a stream and creates a new instance of ToxData.
         /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        public static ToxData FromDisk(string filename)
+        public static ToxData LoadFromStream([NotNull] Stream stream)
         {
-            byte[] bytes;
-            try
+            using(var ms = new MemoryStream())
             {
-                FileInfo info = new FileInfo(filename);
-                bytes = new byte[info.Length];
-
-                using (FileStream stream = new FileStream(filename, FileMode.Open))
-                {
-                    stream.Read(bytes, 0, (int)info.Length);
-                }
+                stream.CopyTo(ms);
+                return new ToxData(ms.ToArray());
             }
-            catch { return null; }
-
-            if (bytes == null || bytes.Length == 0)
-                return null;
-
-            return FromBytes(bytes);
         }
-#endif
 
         /// <summary>
         /// Creates a new instance of ToxData from the specified byte array.
         /// </summary>
         /// <param name="bytes"></param>
         /// <returns></returns>
-        public static ToxData FromBytes(byte[] bytes)
-        {
-            return new ToxData(bytes);
-        }
+        public static ToxData FromBytes([NotNull]byte[] bytes)
+            => new ToxData(bytes);
 
         public static bool operator ==(ToxData data1, ToxData data2)
         {
@@ -121,7 +83,7 @@ namespace SharpTox.Core
             if ((object)data1 == null ^ (object)data2 == null)
                 return false;
 
-            return data1._data.SequenceEqual(data2._data);
+            return data1.bytes.SequenceEqual(data2.bytes);
         }
 
         public static bool operator !=(ToxData data1, ToxData data2)
@@ -142,8 +104,6 @@ namespace SharpTox.Core
         }
 
         public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
+            => base.GetHashCode();
     }
 }

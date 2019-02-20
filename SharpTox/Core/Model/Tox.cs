@@ -406,7 +406,7 @@ namespace SharpTox.Core
         /// Retrieves a ToxData object that contains the profile data of this Tox instance.
         /// </summary>
         /// <returns></returns>
-        public ToxData GetData()
+        public IToxData GetData()
         {
             ThrowIfDisposed();
 
@@ -421,7 +421,7 @@ namespace SharpTox.Core
         /// </summary>
         /// <param name="key">The key to encrypt the Tox data with.</param>
         /// <returns></returns>
-        public ToxData GetData(ToxEncryptionKey key, out ToxErrorEncryption error)
+        public IToxData GetData(ToxEncryptionKey key, out ToxErrorEncryption error)
         {
             ThrowIfDisposed();
             if (key == null)
@@ -440,7 +440,7 @@ namespace SharpTox.Core
             return ToxData.FromBytes(encrypted);
         }
 
-        public ToxData GetData(string password, out ToxErrorEncryption error)
+        public IToxData GetData(string password, out ToxErrorEncryption error)
         {
             ThrowIfDisposed();
 
