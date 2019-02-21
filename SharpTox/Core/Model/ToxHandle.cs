@@ -6,7 +6,7 @@ namespace SharpTox.Core
     /// <summary>
     /// Represents a handle for an instance of tox.
     /// </summary>
-    public class ToxHandle : SafeHandleZeroOrMinusOneIsInvalid
+    class ToxHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         private ToxHandle()
             : base(true) { }
@@ -22,7 +22,7 @@ namespace SharpTox.Core
         }
     }
 
-    public class ToxOptionsHandle : SafeHandleZeroOrMinusOneIsInvalid
+    class ToxOptionsHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         private ToxOptionsHandle() : base(true)
         {

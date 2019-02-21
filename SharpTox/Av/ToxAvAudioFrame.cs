@@ -8,6 +8,7 @@ namespace SharpTox.Av
         public short[] Data { get; private set; }
 
         public int SamplingRate { get; private set; }
+
         public int Channels { get; private set; }
 
         public ToxAvAudioFrame(short[] data, int samplingRate, int channels)

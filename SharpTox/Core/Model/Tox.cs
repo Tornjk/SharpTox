@@ -10,7 +10,7 @@ namespace SharpTox.Core
     /// <summary>
     /// Represents an instance of Tox.
     /// </summary>
-    public sealed class Tox : IDisposable
+    public sealed class Tox : ITox
     {
         private CancellationTokenSource cancelTokenSource;
 
@@ -43,6 +43,15 @@ namespace SharpTox.Core
                     throw new ArgumentException(nameof(value));
                 }
             });
+        }
+
+        /// <summary>
+        /// The nospam for this Tox instance
+        /// </summary>
+        public uint Nospam
+        {
+            get => this.DisposedCheck(handle => ToxFunctions.Self.GetNospam(handle));
+            set => this.DisposedCheck(handle => ToxFunctions.Self.SetNospam(handle, value));
         }
 
         /// <summary>
@@ -94,7 +103,7 @@ namespace SharpTox.Core
         internal ToxHandle Handle { get; }
 
         // THIS IS THE ONE AND ONLY CTOR
-        public Tox(ToxHandle handle)
+        internal Tox([NotNull] ToxHandle handle)
         {
             if (handle == null)
             {
@@ -538,26 +547,6 @@ namespace SharpTox.Core
 
             error = ToxErrorGetPort.Ok;
             return ToxFunctions.Self.GetTcpPort(Handle, ref error);
-        }
-
-        /// <summary>
-        /// Sets the nospam value for this Tox instance.
-        /// </summary>
-        /// <param name="nospam">The nospam value to set.</param>
-        public void SetNospam(uint nospam)
-        {
-            ThrowIfDisposed();
-            ToxFunctions.Self.SetNospam(Handle, nospam);
-        }
-
-        /// <summary>
-        /// Retrieves the nospam value of this Tox instance.
-        /// </summary>
-        /// <returns>The nospam value.</returns>
-        public uint GetNospam()
-        {
-            ThrowIfDisposed();
-            return ToxFunctions.Self.GetNospam(Handle);
         }
 
         /// <summary>

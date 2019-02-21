@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using SharpTox.Core.Interfaces;
 
 namespace SharpTox.Core
 {
@@ -9,31 +10,37 @@ namespace SharpTox.Core
         /// <summary>
         /// The Tox ID of this data file.
         /// </summary>
-        public ToxId Id { get; private set; }
+        public ToxId Id { get; }
 
         /// <summary>
         /// The name used in this data file.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
         /// <summary>
         /// The status message in this data file.
         /// </summary>
-        public string StatusMessage { get; private set; }
+        public string StatusMessage { get; }
 
         /// <summary>
         /// The status used in this data file.
         /// </summary>
-        public ToxUserStatus Status { get; private set; }
+        public ToxUserStatus Status { get; }
 
         /// <summary>
         /// The secret key of this data file.
         /// </summary>
-        public ToxKey SecretKey { get; private set; }
+        public ToxKey SecretKey { get; }
 
-        private ToxDataInfo() { }
+        public ToxDataInfo(ToxId id, string name, string statusMessage, ToxUserStatus status, ToxKey secretKey) {
+            this.Id = id;
+            this.Name = name;
+            this.StatusMessage = statusMessage;
+            this.Status = status;
+            this.SecretKey = secretKey;
+        }
 
-        internal static ToxDataInfo FromToxData(ToxData data)
+        public static ToxDataInfo FromToxData(IToxData data)
         {
             try
             {
@@ -50,7 +57,9 @@ namespace SharpTox.Core
 
                     uint cookie = reader.ReadUInt32();
                     if (cookie != ToxConstants.Cookie)
+                    {
                         throw new Exception("Invalid cookie, this doesn't look like a tox profile");
+                    }
 
                     uint length = reader.ReadUInt32();
                     long left = reader.BaseStream.Length - reader.BaseStream.Position;
@@ -99,14 +108,7 @@ namespace SharpTox.Core
                     }
                 }
 
-                return new ToxDataInfo()
-                {
-                    Id = id,
-                    Name = name,
-                    StatusMessage = statusMessage,
-                    Status = status,
-                    SecretKey = new ToxKey(ToxKeyType.Secret, secretKey)
-                };
+                return new ToxDataInfo(id, name, statusMessage, status, new ToxKey(ToxKeyType.Secret, secretKey));
             }
             catch { return null; }
         }

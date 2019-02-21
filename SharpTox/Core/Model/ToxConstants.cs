@@ -53,36 +53,6 @@ namespace SharpTox.Core
         /// </summary>
         public const int FileIdLength = 32;
 
-        /// <summary>
-        /// The maximum length of a filename.
-        /// </summary>
-        [Obsolete("Use the function instead")]
-        public const int MaxFileNameLength = 255;
-
-        /// <summary>
-        /// The maximum status message length in bytes.
-        /// </summary>
-        [Obsolete("Use the function instead")]
-        public const int MaxStatusMessageLength = 1007;
-
-        /// <summary>
-        /// The maximum friend request message length in bytes.
-        /// </summary>
-        [Obsolete("Use the function instead")]
-        public const int MaxFriendRequestLength = 1016;
-
-        /// <summary>
-        /// The maximum name length in bytes.
-        /// </summary>
-        [Obsolete("Use the function instead")]
-        public const int MaxNameLength = 128;
-
-        /// <summary>
-        /// The maximum length of a custom packet.
-        /// </summary>
-        [Obsolete("Use the function instead")]
-        public const int MaxCustomPacketSize = 1373;
-
         internal static readonly Encoding Encoding = Encoding.UTF8;
 
         //Constants for the the tox data file
