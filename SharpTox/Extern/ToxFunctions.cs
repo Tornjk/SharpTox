@@ -514,28 +514,28 @@ namespace SharpTox.Core
 
         private event EventHandler<TEventArgs> @event;
 
-        public void Add(Tox tox, EventHandler<TEventArgs> handler)
+        public void Add(object sender, ToxHandle handle, EventHandler<TEventArgs> handler)
         {
             if (this.tDelegate == null)
             {
-                this.tDelegate = this.create(args => this.OnCallback(tox, args));
-                this.register(tox.Handle, this.tDelegate);
+                this.tDelegate = this.create(args => this.OnCallback(sender, args));
+                this.register(handle, this.tDelegate);
             }
 
             this.@event += handler;
         }
 
-        public void Remove(Tox tox, EventHandler<TEventArgs> handler)
+        public void Remove(ToxHandle handle, EventHandler<TEventArgs> handler)
         {
             if (this.@event.GetInvocationList().Length == 1)
             {
-                this.register(tox.Handle, null);
+                this.register(handle, null);
                 this.tDelegate = null;
             }
 
             this.@event -= handler;
         }
 
-        private void OnCallback(Tox tox, TEventArgs args) => this.@event?.Invoke(tox, args);
+        private void OnCallback(object sender, TEventArgs args) => this.@event?.Invoke(sender, args);
     }
 }
