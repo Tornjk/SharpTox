@@ -5,7 +5,7 @@ namespace SharpTox.Av
     /// <summary>
     /// Represents a handle for an instance of toxav.
     /// </summary>
-    internal class ToxAvHandle : SafeHandleZeroOrMinusOneIsInvalid
+    class ToxAvHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         private ToxAvHandle()
             : base(true) { }

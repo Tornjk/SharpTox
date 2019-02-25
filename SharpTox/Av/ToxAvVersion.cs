@@ -1,4 +1,4 @@
-﻿using SharpTox.Core;
+﻿using SharpTox.Core.Interface;
 using System.Diagnostics;
 
 namespace SharpTox.Av
@@ -7,7 +7,7 @@ namespace SharpTox.Av
     /// Represents a version of ToxAv.
     /// </summary>
     [DebuggerDisplay("{Major}.{Minor}.{Patch}")]
-    public sealed class ToxAvVersion
+    public sealed class ToxAvVersion : IToxVersion
     {
         /// <summary>
         /// The major version number. Incremented when the API or ABI changes in an incompatible way.

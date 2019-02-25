@@ -1,4 +1,5 @@
 ﻿using System;
+using SharpTox.Av.Interfaces;
 using SharpTox.Encryption;
 
 namespace SharpTox.Core.Interfaces
@@ -40,6 +41,8 @@ namespace SharpTox.Core.Interfaces
         event EventHandler<ToxEventArgs.StatusMessageEventArgs> OnFriendStatusMessageChanged;
         event EventHandler<ToxEventArgs.TypingStatusEventArgs> OnFriendTypingChanged;
         event EventHandler<ToxEventArgs.ReadReceiptEventArgs> OnReadReceiptReceived;
+
+        IToxAv CreateAv();
 
         uint AddFriend(ToxId id, string message, out ToxErrorFriendAdd error);
         uint AddFriendNoRequest(ToxKey publicKey, out ToxErrorFriendAdd error);

@@ -135,7 +135,7 @@ namespace SharpTox.Av
             if (this.tDelegate == null)
             {
                 this.tDelegate = this.create(args => this.OnCallback(tox, args));
-                this.register(tox.Handle, this.tDelegate);
+                this.register(tox.AvHandle, this.tDelegate);
             }
 
             this.@event += handler;
@@ -145,7 +145,7 @@ namespace SharpTox.Av
         {
             if (this.@event.GetInvocationList().Length == 1)
             {
-                this.register(tox.Handle, null);
+                this.register(tox.AvHandle, null);
                 this.tDelegate = null;
             }
 

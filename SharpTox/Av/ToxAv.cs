@@ -1,4 +1,5 @@
-﻿using SharpTox.Core;
+﻿using SharpTox.Av.Interfaces;
+using SharpTox.Core;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -10,7 +11,7 @@ namespace SharpTox.Av
     /// <summary>
     /// Represents an instance of toxav.
     /// </summary>
-    public sealed class ToxAv : IDisposable
+    sealed class ToxAv : IToxAv
     {
         private List<ToxAvDelegates.GroupAudioReceiveDelegate> groupAudioHandlers = new List<ToxAvDelegates.GroupAudioReceiveDelegate>();
         private bool disposed = false;
@@ -26,30 +27,25 @@ namespace SharpTox.Av
         /// <summary>
         /// The handle of this toxav instance.
         /// </summary>
-        internal ToxAvHandle Handle { get; }
+        public ToxAvHandle AvHandle { get; }
 
         /// <summary>
         /// Initialises a new instance of toxav.
         /// </summary>
-        /// <param name="tox"></param>
-        public ToxAv(Tox tox)
+        /// <param name="toxHandle"></param>
+        public ToxAv([NotNull] ToxHandle toxHandle)
         {
-            if (tox == null)
+            if (toxHandle.IsInvalid)
             {
-                throw new ArgumentNullException(nameof(tox));
+                throw new ArgumentException(nameof(toxHandle));
             }
 
-            if (tox.Handle.IsInvalid)
-            {
-                throw new ArgumentException(nameof(tox));
-            }
-
-            this.toxHandle = tox.Handle;
+            this.toxHandle = toxHandle;
 
             var error = ToxAvErrorNew.Ok;
-            this.Handle = ToxAvFunctions.New(tox.Handle, ref error);
+            this.AvHandle = ToxAvFunctions.New(toxHandle, ref error);
 
-            if (this.Handle == null || this.Handle.IsInvalid || error != ToxAvErrorNew.Ok)
+            if (this.AvHandle == null || this.AvHandle.IsInvalid || error != ToxAvErrorNew.Ok)
             {
                 throw new Exception("Could not create a new instance of toxav.");
             }
@@ -60,62 +56,20 @@ namespace SharpTox.Av
 
             Action RegisterAudioVideoCallbacks()
             {
-                this.OnVideoFrameReceived += MockVideoFrameReceive;
-                this.OnAudioFrameReceived += MockAudioFrameReceive;
+                this.OnVideoFrameReceived += StubVideoFrameReceive;
+                this.OnAudioFrameReceived += StubAudioFrameReceive;
 
                 return () =>
                 {
-                    this.OnVideoFrameReceived -= MockVideoFrameReceive;
-                    this.OnAudioFrameReceived -= MockAudioFrameReceive;
+                    this.OnVideoFrameReceived -= StubVideoFrameReceive;
+                    this.OnAudioFrameReceived -= StubAudioFrameReceive;
                 };
 
-                void MockVideoFrameReceive(object sender, ToxAvEventArgs.VideoFrameEventArgs e) { }
-                void MockAudioFrameReceive(object sender, ToxAvEventArgs.AudioFrameEventArgs e) { }
+                void StubVideoFrameReceive(object sender, ToxAvEventArgs.VideoFrameEventArgs e) { }
+                void StubAudioFrameReceive(object sender, ToxAvEventArgs.AudioFrameEventArgs e) { }
             }
         }
 
-        /// <summary>
-        /// Releases all resources used by this instance of tox.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        //dispose pattern as described on msdn for a class that uses a safe handle
-        private void Dispose(bool disposing)
-        {
-            if (disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                this.release?.Invoke();
-                this.release = null;
-
-                if (cancelTokenSource != null)
-                {
-                    try
-                    {
-                        cancelTokenSource.Cancel();
-                        cancelTokenSource.Dispose();
-                    }
-                    catch (ObjectDisposedException) { }
-
-                    this.cancelTokenSource = null;
-                }
-            }
-
-            if (Handle != null && !Handle.IsInvalid && !Handle.IsClosed)
-            {
-                this.Handle.Dispose();
-            }
-
-            disposed = true;
-        }
 
         /// <summary>
         /// Starts the main toxav_do loop.
@@ -191,8 +145,8 @@ namespace SharpTox.Av
 
         private TimeSpan DoIterate()
         {
-            ToxAvFunctions.Iterate(Handle);
-            return TimeSpan.FromMilliseconds(ToxAvFunctions.IterationInterval(Handle));
+            ToxAvFunctions.Iterate(AvHandle);
+            return TimeSpan.FromMilliseconds(ToxAvFunctions.IterationInterval(AvHandle));
         }
 
         public bool Call(uint friendNumber, uint audioBitrate, uint videoBitrate, out ToxAvErrorCall error)
@@ -200,7 +154,7 @@ namespace SharpTox.Av
             ThrowIfDisposed();
 
             error = ToxAvErrorCall.Ok;
-            return ToxAvFunctions.Call(Handle, friendNumber, audioBitrate, videoBitrate, ref error);
+            return ToxAvFunctions.Call(AvHandle, friendNumber, audioBitrate, videoBitrate, ref error);
         }
 
         public bool Answer(uint friendNumber, uint audioBitrate, uint videoBitrate, out ToxAvErrorAnswer error)
@@ -208,7 +162,7 @@ namespace SharpTox.Av
             ThrowIfDisposed();
 
             error = ToxAvErrorAnswer.Ok;
-            return ToxAvFunctions.Answer(Handle, friendNumber, audioBitrate, videoBitrate, ref error);
+            return ToxAvFunctions.Answer(AvHandle, friendNumber, audioBitrate, videoBitrate, ref error);
         }
 
         public bool SendControl(uint friendNumber, ToxAvCallControl control, out ToxAvErrorCallControl error)
@@ -216,7 +170,7 @@ namespace SharpTox.Av
             ThrowIfDisposed();
 
             error = ToxAvErrorCallControl.Ok;
-            return ToxAvFunctions.CallControl(Handle, friendNumber, control, ref error);
+            return ToxAvFunctions.CallControl(AvHandle, friendNumber, control, ref error);
         }
 
         public bool SetAudioBitrate(uint friendNumber, uint bitrate, out ToxAvErrorBitRateSet error)
@@ -224,7 +178,7 @@ namespace SharpTox.Av
             ThrowIfDisposed();
 
             error = ToxAvErrorBitRateSet.Ok;
-            return ToxAvFunctions.Audio.SetBitrate(Handle, friendNumber, bitrate, ref error);
+            return ToxAvFunctions.Audio.SetBitrate(AvHandle, friendNumber, bitrate, ref error);
         }
 
         public bool SetVideoBitrate(uint friendNumber, uint bitrate, out ToxAvErrorBitRateSet error)
@@ -232,14 +186,14 @@ namespace SharpTox.Av
             ThrowIfDisposed();
 
             error = ToxAvErrorBitRateSet.Ok;
-            return ToxAvFunctions.Video.SetBitrate(Handle, friendNumber, bitrate, ref error);
+            return ToxAvFunctions.Video.SetBitrate(AvHandle, friendNumber, bitrate, ref error);
         }
 
         public bool SendVideoFrame(uint friendNumber, ToxAvVideoFrame frame, out ToxAvErrorSendFrame error)
         {
             ThrowIfDisposed();
             error = ToxAvErrorSendFrame.Ok;
-            return ToxAvFunctions.Video.SendFrame(Handle, friendNumber, frame.Width, frame.Height, frame.Y, frame.U, frame.V, ref error);
+            return ToxAvFunctions.Video.SendFrame(AvHandle, friendNumber, frame.Width, frame.Height, frame.Y, frame.U, frame.V, ref error);
         }
 
         public bool SendAudioFrame(uint friendNumber, ToxAvAudioFrame frame, out ToxAvErrorSendFrame error)
@@ -247,7 +201,7 @@ namespace SharpTox.Av
             ThrowIfDisposed();
 
             error = ToxAvErrorSendFrame.Ok;
-            return ToxAvFunctions.Audio.SendFrame(Handle, friendNumber, frame.Data, (uint)(frame.Data.Length / frame.Channels), (byte)frame.Channels, (uint)frame.SamplingRate, ref error);
+            return ToxAvFunctions.Audio.SendFrame(AvHandle, friendNumber, frame.Data, (uint)(frame.Data.Length / frame.Channels), (byte)frame.Channels, (uint)frame.SamplingRate, ref error);
         }
 
         /// <summary>
@@ -353,42 +307,8 @@ namespace SharpTox.Av
             remove => this.callStateChange.Remove(this, value);
         }
 
-        //private EventHandler<ToxAvEventArgs.BitrateStatusEventArgs> _onBitrateSuggestion;
-
-        ///// <summary>
-        ///// Occurs when a friend changed their bitrate during a call.
-        ///// </summary>
-        //public event EventHandler<ToxAvEventArgs.BitrateStatusEventArgs> OnBitrateSuggestion
-        //{
-        //    add
-        //    {
-        //        if (_onBitrateStatusCallback == null)
-        //        {
-        //            _onBitrateStatusCallback = (IntPtr toxAv, uint friendNumber, uint audioBitrate, uint videoBitrate, IntPtr userData) =>
-        //            {
-        //                    if (_onBitrateSuggestion != null)
-        //                        _onBitrateSuggestion(this, new ToxAvEventArgs.BitrateStatusEventArgs(ToxTools.Map(friendNumber), (int)audioBitrate, (int)videoBitrate));
-        //            };
-
-        //            ToxAvFunctions.RegisterBitrateStatusCallback(Handle, _onBitrateStatusCallback, IntPtr.Zero);
-        //        }
-
-        //        _onBitrateSuggestion += value;
-        //    }
-        //    remove
-        //    {
-        //        if (_onBitrateSuggestion.GetInvocationList().Length == 1)
-        //        {
-        //            ToxAvFunctions.RegisterBitrateStatusCallback(Handle, null, IntPtr.Zero);
-        //            _onBitrateStatusCallback = null;
-        //        }
-
-        //        _onBitrateSuggestion -= value;
-        //    }
-        //}
-
         private readonly ToxAvCallbackHandler<ToxAvEventArgs.VideoBitrateEventArgs, ToxAvDelegates.VideoBitRateDelegate> videoBitrateChange
-            = new ToxAvCallbackHandler<ToxAvEventArgs.VideoBitrateEventArgs, ToxAvDelegates.VideoBitRateDelegate>(ToxAvCallbacks.Video.BitRate, cb =>
+             = new ToxAvCallbackHandler<ToxAvEventArgs.VideoBitrateEventArgs, ToxAvDelegates.VideoBitRateDelegate>(ToxAvCallbacks.Video.BitRate, cb =>
                 (toxAv, friendNumber, bitrate, userData) =>
                         cb(new ToxAvEventArgs.VideoBitrateEventArgs(friendNumber, bitrate)));
 
@@ -439,6 +359,49 @@ namespace SharpTox.Av
         public event EventHandler<ToxAvEventArgs.GroupAudioDataEventArgs> OnReceivedGroupAudio;
 
         #endregion
+
+        /// <summary>
+        /// Releases all resources used by this instance of tox.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        //dispose pattern as described on msdn for a class that uses a safe handle
+        private void Dispose(bool disposing)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                this.release?.Invoke();
+                this.release = null;
+
+                if (cancelTokenSource != null)
+                {
+                    try
+                    {
+                        cancelTokenSource.Cancel();
+                        cancelTokenSource.Dispose();
+                    }
+                    catch (ObjectDisposedException) { }
+
+                    this.cancelTokenSource = null;
+                }
+            }
+
+            if (AvHandle != null && !AvHandle.IsInvalid && !AvHandle.IsClosed)
+            {
+                this.AvHandle.Dispose();
+            }
+
+            disposed = true;
+        }
 
         private void ThrowIfDisposed()
         {

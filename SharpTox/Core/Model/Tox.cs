@@ -1,7 +1,8 @@
+using SharpTox.Av;
+using SharpTox.Av.Interfaces;
 using SharpTox.Core.Interfaces;
 using SharpTox.Encryption;
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,7 +11,7 @@ namespace SharpTox.Core
     /// <summary>
     /// Represents an instance of Tox.
     /// </summary>
-    public sealed class Tox : ITox
+    sealed class Tox : ITox
     {
         private CancellationTokenSource cancelTokenSource;
 
@@ -100,10 +101,10 @@ namespace SharpTox.Core
         /// The handle of this instance of Tox. 
         /// Do not dispose this handle manually, use the Dispose method in this class instead.
         /// </summary>
-        internal ToxHandle Handle { get; }
+        public ToxHandle Handle { get; }
 
         // THIS IS THE ONE AND ONLY CTOR
-        internal Tox([NotNull] ToxHandle handle)
+        public Tox([NotNull] ToxHandle handle)
         {
             if (handle == null)
             {
@@ -118,50 +119,8 @@ namespace SharpTox.Core
             this.Handle = handle;
         }
 
-        /// <summary>
-        /// Initializes a new instance of Tox. If no secret key is specified, toxcore will generate a new keypair.
-        /// </summary>
-        /// <param name="options">The options to initialize this instance of Tox with.</param>
-        /// <param name="secretKey">Optionally, specify the secret key to initialize this instance of Tox with. Must be ToxConstants.SecretKeySize bytes in size.</param>
-        public Tox(ToxOptions options) : this(options.Create())
-        {
-        }
-
-        /// <summary>
-        /// Releases all resources used by this instance of Tox.
-        /// </summary>
-        public void Dispose() => Dispose(true);
-
-        private void Dispose(bool disposing)
-        {
-            if (this.disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                // security critical
-                if (this.cancelTokenSource != null)
-                {
-                    try
-                    {
-                        this.cancelTokenSource.Cancel();
-                        this.cancelTokenSource.Dispose();
-                    }
-                    catch (ObjectDisposedException) { }
-
-                    this.cancelTokenSource = null;
-                }
-            }
-
-            if (!Handle.IsInvalid && !Handle.IsClosed)
-            {
-                Handle.Dispose();
-            }
-
-            this.disposed = true;
-        }
+        public IToxAv CreateAv()
+            => new ToxAv(this.Handle);
 
         /// <summary>
         /// Starts the main 'tox_iterate' loop at an interval retrieved with 'tox_iteration_interval'.
@@ -1238,6 +1197,42 @@ namespace SharpTox.Core
         {
             if (this.disposed)
                 throw new ObjectDisposedException(GetType().FullName);
+        }
+
+        /// <summary>
+        /// Releases all resources used by this instance of Tox.
+        /// </summary>
+        void IDisposable.Dispose() => Dispose(true);
+
+        private void Dispose(bool disposing)
+        {
+            if (this.disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                // security critical
+                if (this.cancelTokenSource != null)
+                {
+                    try
+                    {
+                        this.cancelTokenSource.Cancel();
+                        this.cancelTokenSource.Dispose();
+                    }
+                    catch (ObjectDisposedException) { }
+
+                    this.cancelTokenSource = null;
+                }
+            }
+
+            if (!Handle.IsInvalid && !Handle.IsClosed)
+            {
+                Handle.Dispose();
+            }
+
+            this.disposed = true;
         }
     }
 }
