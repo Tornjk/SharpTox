@@ -3,7 +3,7 @@ SharpTox
 Unofficial
 --------
 
-This project aims to provide a simple library that wraps all of the functions found in the [Tox library](https://github.com/irungentoo/ProjectTox-Core "ProjectTox GitHub repo"). (Tox.h, ToxAv.h, ToxEncryption.h)
+This project aims to provide a simple library that wraps all of the functions found in the [ProjectTox GitHub repo](https://github.com/TokTok/c-toxcore "Tox on GitHub"). (Tox.h, ToxAv.h, ToxEncryption.h)
 
 Tox is a free (as in freedom) Skype replacement.
 
@@ -19,7 +19,7 @@ The current version I program against is **0.2.8** of toxcore.
 
 ### Things you'll need
 
-* The libtox library, you should compile that yourself from the [ProjectTox GitHub repo](https://github.com/irungentoo/ProjectTox-Core "Tox Github repo"). Guidelines on how to do this can be found [here](https://github.com/irungentoo/toxcore/blob/master/INSTALL.md "Crosscompile guidelines"). If you don't feel like compiling this yourself, you can find automatic builds for windows here: [x86](https://build.tox.chat/view/libtoxcore/job/libtoxcore-toktok_build_windows_x86_shared_release/ "x86 dll") or [x64](https://build.tox.chat/view/libtoxcore/job/libtoxcore-toktok_build_windows_x86-64_shared_release/ "x64 dll")
+* The libtox library, you should compile that yourself from the [ProjectTox GitHub repo](https://github.com/TokTok/c-toxcore "Tox on GitHub"). Guidelines on how to do this can be found [here](https://github.com/TokTok/c-toxcore/blob/master/INSTALL.md "Crosscompile guidelines"). If you don't feel like compiling this yourself, you can find automatic builds for windows here: [x86](https://build.tox.chat/view/libtoxcore/job/libtoxcore-toktok_build_windows_x86_shared_release/ "x86 dll") or [x64](https://build.tox.chat/view/libtoxcore/job/libtoxcore-toktok_build_windows_x86-64_shared_release/ "x64 dll")
 
 Depending on how you compiled the core libraries, the names of those may differ from the 
 defaults in SharpTox. Be sure to change the value of the const string **DLL**
@@ -41,96 +41,96 @@ dotnet restore
 dotnet build
 ```
 
-#### Run the Tests (Windows)
-In order to run the Tests for SharpTox make sure the **libtox** library is in your
-SharpTox.Tests/bin/(Configuration) directory.
+#### Run the Tests 
+In order to run the Tests for SharpTox you do **not** need libtox.{dll,so,dylib} in your executing directory anymore.
 Run from your commandline:
 
 ```
 dotnet test
 ```
 
-#### Run the Tests (Linux)
-In order to run the Tests for SharpTox make sure the libtoxcore.so is installed on your os.
-Run from your commandline:
+#### Run the Sample 
+For the sample you **require** the libtox.{dll,so,dylib} in your executing directory!
+Run from your commandline in the root SharpTox folder:
 
 ```
-dotnet test
+dotnet run --project SharpTox.Sample
 ```
 
-#### Troubleshoot Linux
-I myself only tested very little SharpTox on a debian 9 machine. If you're more sophisticated with debian and it's lib mechanism feel free to teach me.
+A ToxID will be displayed and every friend request will be accepted automatically.
+Every message sent will be displayed on the commandline.
+Use any current Tox Messenger to try it.
 
-How I got it working:
-Build libsodium and toxcore on debian and reference it in **Extern.cs** in SharpTox.
-I did not test it with Av.
+If no second message (Udp or Tcp) is displayed after some seconds you may want to check if the Nodes are up 2 date.
 
 ## Attention:
 This repository is currently mainly for my own programming uses.
 If anything comes up or this changes I will write it down somewhere.
-Also I'm developing on Windows. So I'm not certain everything is working on Unix/Mac.
+Also I'm developing on Windows. So I cannot truly troubleshoot P/Invoke questions on Linux/Mac.
 
 ***Looking for precompiled binaries? I do not provide them currently. Sorry!***
 
-### Basic Usage
+### Basic Usage (Program.cs in SharpTox.Sample)
 ```csharp
 using System;
 using SharpTox.Core;
+using SharpTox.Core.Interfaces;
 
-class Program
+namespace SharpTox.Sample
 {
-    static void Main(string[] args)
+    class Program
     {
-        ToxOptions options = ToxOptions.Default();
-
-        using(var tox = new Tox(options))
+        static void Main(string[] args)
         {
-            tox.OnFriendRequestReceived += tox_OnFriendRequestReceived;
-            tox.OnFriendMessageReceived += tox_OnFriendMessageReceived;
-
-            foreach (ToxNode node in Nodes)
+            using (IToxOptions options = ToxOptions.Default())
+            using (ITox tox = options.Create())
             {
-                tox.Bootstrap(node, out _);
+                tox.OnFriendRequestReceived += OnFriendRequestReceived;
+                tox.OnFriendMessageReceived += OnFriendMessageReceived;
+                tox.OnConnectionStatusChanged += Tox_OnConnectionStatusChanged;
+
+                foreach (ToxNode node in Nodes)
+                {
+                    tox.Bootstrap(node, out _);
+                }
+
+                tox.Name = "SharpTox";
+                tox.StatusMessage = "Testing SharpTox";
+
+                using (ToxLoop.Start(tox))
+                {
+                    Console.WriteLine($"ID: {tox.Id}");
+                    Console.ReadKey();
+                }
+
+                void OnFriendMessageReceived(object sender, ToxEventArgs.FriendMessageEventArgs e)
+                {
+                    //get the name associated with the friendnumber
+                    string name = tox.GetFriendName(e.FriendNumber, out _);
+
+                    //print the message to the console
+                    Console.WriteLine("<{0}> {1}", name, e.Message);
+                }
+
+                void OnFriendRequestReceived(object sender, ToxEventArgs.FriendRequestEventArgs e)
+                {
+                    //automatically accept every friend request we receive
+                    tox.AddFriendNoRequest(e.PublicKey, out _);
+                }
             }
-
-            tox.Name = "SharpTox";
-            tox.StatusMessage = "Testing SharpTox";
-
-            tox.Start();
-
-            Console.WriteLine($"ID: {tox.Id}");
-            Console.ReadKey();
-
-            tox.Stop();
         }
-    }
 
-    //check https://wiki.tox.im/Nodes for an up-to-date list of nodes
-    static ToxNode[] Nodes = new ToxNode[]
-    {
-        new ToxNode("192.254.75.98", 33445, new ToxKey(ToxKeyType.Public, "951C88B7E75C867418ACDB5D273821372BB5BD652740BCDF623A4FA293E75D2F")),
-        new ToxNode("144.76.60.215", 33445, new ToxKey(ToxKeyType.Public, "04119E835DF3E78BACF0F84235B300546AF8B936F035185E2A8E9E0A67C8924F"))
-    };
+        private static void Tox_OnConnectionStatusChanged(object sender, ToxEventArgs.ConnectionStatusEventArgs e)
+        {
+            Console.WriteLine(e.Status);
+        }
 
-    static void tox_OnFriendMessageReceived(object sender, ToxEventArgs.FriendMessageEventArgs e)
-    {
-        //get the name associated with the friendnumber
-        string name = tox.GetFriendName(e.FriendNumber);
-
-        //print the message to the console
-        Console.WriteLine("<{0}> {1}", name, e.Message);
-    }
-
-    static void tox_OnFriendRequestReceived(object sender, ToxEventArgs.FriendRequestEventArgs e)
-    {
-        //automatically accept every friend request we receive
-        tox.AddFriendNoRequest(e.PublicKey);
+        //check https://wiki.tox.im/Nodes for an up-to-date list of nodes
+        private static readonly ToxNode[] Nodes = new ToxNode[]
+        {
+            new ToxNode("node.tox.biribiri.org", 33445, new ToxKey(ToxKeyType.Public, "8E7D0B859922EF569298B4D261A8CCB5FEA14FB91ED412A7603A585A25698832")),
+            new ToxNode("tox.verdict.gg", 33445, new ToxKey(ToxKeyType.Public, "1C5293AEF2114717547B39DA8EA6F1E331E5E358B35F9B6B5F19317911C5F976")),
+        };
     }
 }
-
 ```
-
-Contact
--------
-* Join the official IRC channel #tox-dev on freenode
-[![Official Tox Dev IRC Channel](https://kiwiirc.com/buttons/irc.freenode.net/tox-dev.png)](https://kiwiirc.com/client/irc.freenode.net/?theme=basic#tox-dev)

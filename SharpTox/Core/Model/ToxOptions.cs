@@ -6,7 +6,8 @@ namespace SharpTox.Core
 {
     public sealed class ToxOptions : IToxOptions
     {
-        private readonly ToxOptionsHandle options;
+        private bool disposed;
+        private ToxOptionsHandle options;
 
         public ToxOptions()
         {
@@ -15,9 +16,9 @@ namespace SharpTox.Core
             {
                 this.options = ToxFunctions.Options.New(ref err);
             }
-            catch (EntryPointNotFoundException)
+            catch (DllNotFoundException)
             {
-                throw new InvalidOperationException($"The underlying {Extern.DLL} was not found.");
+                throw new InvalidOperationException($"The underlying {Extern.DLL} was not found. Make sure it's the same folder as the executing binary.");
             }
 
             if (err != ToxErrorOptionsNew.Ok)
@@ -157,9 +158,6 @@ namespace SharpTox.Core
             ToxFunctions.Options.SetSavedataData(this.options, ptr, (uint)data.Length);
         }
 
-        void IDisposable.Dispose()
-            => this.options.Dispose();
-
         public IToxOptionsSavedata GetSaveData()
         {
             var type = ToxFunctions.Options.GetSavedataType(this.options);
@@ -170,6 +168,16 @@ namespace SharpTox.Core
             }
 
             return new OptionsSavedata(type, data);
+        }
+
+        void IDisposable.Dispose()
+        {
+            if (!this.disposed)
+            {
+                this.options.Dispose();
+                this.options = null;
+                this.disposed = true;
+            }
         }
 
         private class OptionsSavedata : IToxOptionsSavedata

@@ -45,8 +45,9 @@ namespace SharpTox.Core
 
         public class FriendRequestEventArgs : EventArgs
         {
-            public ToxKey PublicKey { get; private set; }
-            public string Message { get; private set; }
+            public ToxKey PublicKey { get; }
+
+            public string Message { get; }
 
             public FriendRequestEventArgs(ToxKey publicKey, string message)
             {
