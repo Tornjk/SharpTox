@@ -1,8 +1,9 @@
 ﻿using System;
+using SharpTox.Core.Interfaces;
 
 namespace SharpTox.Av.Interfaces
 {
-    public interface IToxAv : IDisposable
+    public interface IToxAv : IToxIterate, IDisposable
     {
         event EventHandler<ToxAvEventArgs.AudioBitrateEventArgs> OnAudioBitrateChanged;
         event EventHandler<ToxAvEventArgs.AudioFrameEventArgs> OnAudioFrameReceived;
@@ -16,7 +17,6 @@ namespace SharpTox.Av.Interfaces
         bool Answer(uint friendNumber, uint audioBitrate, uint videoBitrate, out ToxAvErrorAnswer error);
         bool Call(uint friendNumber, uint audioBitrate, uint videoBitrate, out ToxAvErrorCall error);
         bool GroupSendAudio(uint groupNumber, short[] pcm, uint perframe, byte channels, uint sampleRate);
-        TimeSpan Iterate();
         int JoinAvGroupchat(uint friendNumber, byte[] data);
         bool SendAudioFrame(uint friendNumber, ToxAvAudioFrame frame, out ToxAvErrorSendFrame error);
         bool SendControl(uint friendNumber, ToxAvCallControl control, out ToxAvErrorCallControl error);

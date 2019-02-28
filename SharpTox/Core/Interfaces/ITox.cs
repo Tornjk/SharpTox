@@ -4,7 +4,7 @@ using SharpTox.Encryption;
 
 namespace SharpTox.Core.Interfaces
 {
-    public interface ITox : IDisposable
+    public interface ITox : IToxIterate, IDisposable
     {
         ToxKey DhtId { get; }
 
@@ -77,7 +77,6 @@ namespace SharpTox.Core.Interfaces
         ushort GetTcpPort(out ToxErrorGetPort error);
         ushort GetUdpPort(out ToxErrorGetPort error);
         bool InviteFriend(uint friendNumber, uint conferenceNumber, out ToxErrorConferenceInvite error);
-        TimeSpan Iterate();
         uint JoinConference(uint friendNumber, byte[] cookie, out ToxErrorConferenceJoin error);
         uint NewConference(out ToxErrorConferenceNew error);
         bool PeerNumberIsOurs(uint conferenceNumber, uint peerNumber, out ToxErrorConferencePeerQuery error);
