@@ -1,46 +1,23 @@
 ﻿using System;
-using System.Threading;
+using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using SharpTox.Core.Interfaces;
 
 namespace SharpTox.Core
 {
-    public class ToxLoop : IDisposable
+    public static class ToxLoop
     {
-        private bool disposed;
-        private ITox tox;
-
-        private ToxLoop(ITox tox)
+        public static IDisposable Start([NotNull] IToxIterate toxIterate, IScheduler scheduler = null)
         {
-            this.tox = tox;
-        }
+            SerialDisposable serial = new SerialDisposable();
+            scheduler = scheduler ?? Scheduler.Default;
+            serial.Disposable = scheduler.Schedule(Iterate);
+            return serial;
 
-        public static ToxLoop Start([NotNull] ITox tox)
-        {
-            var toxLoop = new ToxLoop(tox);
-            toxLoop.Loop();
-            return toxLoop;
-        }
-
-        private void Loop()
-        {
-            var thread = new Thread(() =>
+            void Iterate()
             {
-                while (!this.disposed)
-                {
-                    var time = this.tox.Iterate();
-                    Thread.Sleep(time);
-                }
-            });
-
-            thread.Start();
-        }
-
-        void IDisposable.Dispose()
-        {
-            if (!this.disposed)
-            {
-                this.tox = null;
-                this.disposed = true;
+                var time = toxIterate.Iterate();
+                serial.Disposable = scheduler.Schedule(time, Iterate);
             }
         }
     }
